@@ -51,3 +51,32 @@ INSERT INTO `Inventory` VALUES
 (10, 'Coffee Maker', 'Home Appliances', 99.99, 35, '2024-10-30');
 /*!40000 ALTER TABLE `Inventory` ENABLE KEYS */;
 UNLOCK TABLES;
+
+
+
+--
+-- Table structure for table `store_record`
+--
+
+DROP TABLE IF EXISTS `store_record`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `store_record` (
+  `storeID` int NOT NULL,
+  `storeName` varchar(45) DEFAULT NULL,
+  `email` varchar(45) DEFAULT NULL,
+  `contactNo` varchar(45) DEFAULT NULL,
+  `contactAdd` varchar(45) DEFAULT NULL,
+  `productsID` varchar(45) DEFAULT NULL,
+  PRIMARY KEY (`storeID`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `store_record`
+--
+
+LOCK TABLES `store_record` WRITE;
+/*!40000 ALTER TABLE `store_record` DISABLE KEYS */;
+/*!40000 ALTER TABLE `store_record` ENABLE KEYS */;
+UNLOCK TABLES;
