@@ -80,3 +80,48 @@ LOCK TABLES `store_record` WRITE;
 /*!40000 ALTER TABLE `store_record` DISABLE KEYS */;
 /*!40000 ALTER TABLE `store_record` ENABLE KEYS */;
 UNLOCK TABLES;
+
+-- Table structure for table `Orders`
+DROP TABLE IF EXISTS `Orders`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+
+CREATE TABLE `Orders` (
+  `OrderID` int(11) NOT NULL AUTO_INCREMENT,
+  `ProductID` int(11) NOT NULL,
+  `OrderDate` date NOT NULL,
+  `DeliveryDate` date DEFAULT NULL,
+  `OrderStatus` char(20) NOT NULL DEFAULT 'Pending',
+  `OrderQuantity` int(11) NOT NULL,
+  `TotalPrice` decimal(10,2) NOT NULL,
+  PRIMARY KEY (`OrderID`),
+  FOREIGN KEY (`ProductID`) REFERENCES `Inventory`(`ProductID`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+
+-- Inserting sample data into `Orders`
+LOCK TABLES `Orders` WRITE;
+/*!40000 ALTER TABLE `Orders` DISABLE KEYS */;
+INSERT INTO `Orders` (`ProductID`, `OrderDate`, `DeliveryDate`, `OrderStatus`, `OrderQuantity`, `TotalPrice`) VALUES
+(1, '2024-11-01', '2024-11-05', 'Delivered', 2, 1999.98),          -- 2 Laptops
+(2, '2024-11-02', '2024-11-06', 'Shipped', 5, 149.95),             -- 5 Wireless Mice
+(3, '2024-11-03', '2024-11-07', 'Pending', 1, 699.99),             -- 1 Smartphone
+(4, '2024-11-04', '2024-11-10', 'Delivered', 3, 149.97),           -- 3 Desk Lamps
+(5, '2024-11-05', '2024-11-11', 'Shipped', 4, 239.96),             -- 4 Bluetooth Speakers
+(6, '2024-11-06', '2024-11-15', 'Pending', 1, 199.99),             -- 1 Office Chair
+(7, '2024-11-07', '2024-11-12', 'Delivered', 1, 299.99),           -- 1 Monitor 27"
+(8, '2024-11-08', '2024-11-15', 'Pending', 2, 159.98),             -- 2 Keyboards
+(9, '2024-11-09', '2024-11-17', 'Delivered', 1, 89.99),            -- 1 Bookshelf
+(10, '2024-11-10', '2024-11-18', 'Shipped', 1, 99.99);             -- 1 Coffee Maker
+/*!40000 ALTER TABLE `Orders` ENABLE KEYS */;
+UNLOCK TABLES;
+
+-- Restore MySQL settings
+/*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
+/*!40014 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS */;
+/*!40014 SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS */;
+/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
+/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
+/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
+/*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
+/*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
+
