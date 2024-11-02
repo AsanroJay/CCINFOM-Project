@@ -53,33 +53,36 @@ INSERT INTO `Inventory` VALUES
 UNLOCK TABLES;
 
 
-
 --
--- Table structure for table `store_record`
+-- Table structure for table `Store`
 --
 
-DROP TABLE IF EXISTS `store_record`;
+DROP TABLE IF EXISTS `Store`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `store_record` (
-  `storeID` int NOT NULL,
-  `storeName` varchar(45) DEFAULT NULL,
-  `email` varchar(45) DEFAULT NULL,
-  `contactNo` varchar(45) DEFAULT NULL,
-  `contactAdd` varchar(45) DEFAULT NULL,
-  `productsID` varchar(45) DEFAULT NULL,
-  PRIMARY KEY (`storeID`)
+CREATE TABLE `Store` (
+  `StoreID` int NOT NULL,
+  `StoreName` varchar(45) NOT NULL,
+  `Email` varchar(45) NOT NULL,
+  `ContactNum` varchar(45) NOT NULL,
+  `ContactAddress` varchar(45) NOT NULL,
+  `ProductsID` varchar(45) NOT NULL,
+  PRIMARY KEY (`StoreID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Dumping data for table `store_record`
+-- Dumping data for table `Store`
 --
 
-LOCK TABLES `store_record` WRITE;
-/*!40000 ALTER TABLE `store_record` DISABLE KEYS */;
-/*!40000 ALTER TABLE `store_record` ENABLE KEYS */;
+LOCK TABLES `Store` WRITE;
+/*!40000 ALTER TABLE `Store` DISABLE KEYS */;
+INSERT INTO `Store` VALUES (1,'Fraser Speakers','fraser@gmail.com','0912 400 8000','Quezon City','5'),(2,'Yohan Lights','yohan@gmail.com','0917 444 5555','Makati City','4'),(3,'Jay Phones','jay@gmail.com','0932 211 8822','Mandaluyong City','3'),(4,'Temu','jed@gmail.com','0925 111 0000','Manila','2'),(5,'IKEA','ikea@gmail.com','0917 123 5678','Caloocan','1'),(6,'Etsy','etsy@gmail.com','0917 765 1234','Las Pinas','10'),(7,'Lazada','lazada@gmail.com','0917 321 5678','Pasay','9'),(8,'Shein','shein@gmail.com','0917 567 4321','Pasig','8'),(9,'Shopee','shopee@gmail.com','0917 345 9876','San Juan','7'),(10,'Amazon','amazon@gmail.com','0917 456 8765','Taguig','6');
+/*!40000 ALTER TABLE `Store` ENABLE KEYS */;
 UNLOCK TABLES;
+
+
+
 
 -- Table structure for table `Orders`
 DROP TABLE IF EXISTS `Orders`;
