@@ -1,0 +1,7 @@
+INSERT INTO Category (CategoryID, CategoryName) VALUES
+('CAT001', 'Monitors'),
+('CAT002', 'Keyboard'),
+('CAT003', 'Mouse'),
+('CAT004', 'Mousepad'),
+('CAT005', 'Headset'),
+('CAT006', 'Earphones');
