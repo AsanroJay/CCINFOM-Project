@@ -14,6 +14,21 @@ INSERT INTO Products (ProductID, CategoryID, ProductName, Price, QuantityInStock
 ('P013', 'CAT002', 'M450 RGB', 6699.99, 30, '2024-10-01'),
 ('P014', 'CAT002', 'F350 ULTRA', 6599.99, 15, '2024-10-15'),
 ('P015', 'CAT002', 'X500 PRO', 6499.99, 20, '2024-11-01');
+('P016', 'CAT004', 'Fantech Strike Pad', 1250.00, 187, '2024-02-15'),
+('P017', 'CAT004', 'Artisan Hien', 2900.00, 278, '2024-04-22'),
+('P018', 'CAT004', 'Artisan Zero', 3150.00, 113, '2024-07-04'),
+('P019', 'CAT004', 'Steelseries QCK', 1300.00, 55, '2024-09-13'),
+('P020', 'CAT004', 'Steelseries QCK Heavy', 1500.00, 204, '2024-03-18'),
+('P021', 'CAT005', 'SteelSeries Arctis Nova', 5500.00, 283, '2024-06-25'),
+('P022', 'CAT005', 'Razer Blackshark V2', 6000.00, 78, '2024-11-09'),
+('P023', 'CAT005', 'Razer Kraken Kitty V2 Pro', 7200.00, 130, '2024-08-21'),
+('P024', 'CAT005', 'Turtle Beach Atlas Air', 4500.00, 45, '2024-12-02'),
+('P025', 'CAT005', 'Astro Gaming A10', 3800.00, 197, '2024-01-18'),
+('P026', 'CAT006', 'Anker Soundcore Space A40 Truly Wireless', 3500.00, 265, '2024-05-10'),
+('P027', 'CAT006', 'Sennheiser MOMENTUM True Wireless 4', 5000.00, 67, '2024-07-29'),
+('P028', 'CAT006', 'MOONDROP Blessing 3', 6500.00, 200, '2024-03-04'),
+('P029', 'CAT006', 'Sony WF-1000XM5 Truly Wireless', 7500.00, 149, '2024-10-16'),
+('P030', 'CAT006', 'Apple AirPods Pro 2', 8500.00, 78, '2024-08-09');
 
 
 
