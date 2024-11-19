@@ -1,1 +1,12 @@
 
+INSERT INTO Products (ProductID, CategoryID, ProductName, Price, QuantityInStock, DateAdded) VALUES
+('P001', 'CAT001', 'Smartphone', 699.99, 50, '2024-01-15'),
+('P002', 'CAT001', 'Laptop', 1199.99, 30, '2024-02-25'),
+('P003', 'CAT002', 'Fiction Book', 14.99, 100, '2024-03-10'),
+('P004', 'CAT003', 'Jeans', 49.99, 75, '2024-04-05'),
+('P005', 'CAT004', 'Apples', 3.99, 200, '2024-05-01'),
+('P006', 'CAT005', 'Sofa', 499.99, 10, '2024-06-18'),
+('P007', 'CAT006', 'Action Figure', 19.99, 150, '2024-07-23'),
+('P008', 'CAT007', 'Face Cream', 29.99, 60, '2024-08-30'),
+('P009', 'CAT008', 'Basketball', 29.99, 40, '2024-09-15'),
+('P010', 'CAT009', 'Car Wax', 15.99, 80, '2024-10-22');
