@@ -214,6 +214,32 @@ VALUES
 ('S-004', 'Mouse Supply Co.', 'service@mouseco.com', '09456789012'),
 ('S-005', 'GameXtreme', 'contact@gamextreme.com', '09567890123');
 
+INSERT INTO PurchaseOrderLine (PurchaseOrderLineID, ProductID, PurchaseOrderID, Cost, Quantity, Subtotal)
+VALUES
+(1, 'P-001', 'PO-001', 50.00, 2, 100.00),
+(2, 'P-002', 'PO-002', 30.00, 5, 150.00),
+(3, 'P-003', 'PO-003', 20.00, 10, 200.00),
+(4, 'P-004', 'PO-004', 40.00, 3, 120.00),
+(5, 'P-005', 'PO-005', 25.00, 8, 200.00),
+(6, 'P-006', 'PO-006', 35.00, 4, 140.00),
+(7, 'P-007', 'PO-007', 45.00, 6, 270.00),
+(8, 'P-008', 'PO-008', 15.00, 12, 180.00),
+(9, 'P-009', 'PO-009', 60.00, 1, 60.00),
+(10, 'P-010', 'PO-010', 10.00, 20, 200.00);
+
+INSERT INTO PurchaseOrder (PurchaseOrderID, SupplierID, OrderDate, OrderStatus, TotalCost)
+VALUES
+('PO-001', 'S-001', '2024-11-01', 'Pending', 100.00),
+('PO-002', 'S-002', '2024-11-02', 'Completed', 150.00),
+('PO-003', 'S-003', '2024-11-03', 'Pending', 200.00),
+('PO-004', 'S-004', '2024-11-04', 'Cancelled', 120.00),
+('PO-005', 'S-005', '2024-11-05', 'Completed', 200.00),
+('PO-006', 'S-006', '2024-11-06', 'Pending', 140.00),
+('PO-007', 'S-007', '2024-11-07', 'Completed', 270.00),
+('PO-008', 'S-008', '2024-11-08', 'Pending', 180.00),
+('PO-009', 'S-009', '2024-11-09', 'Completed', 60.00),
+('PO-010', 'S-010', '2024-11-10', 'Cancelled', 200.00);
+
 INSERT INTO Paymentinfo (PaymentID, OrderID, CardNo, CardCVC, CardExpirationMonth, CardExpirationYear, PaymentType, DateOfPayment) VALUES
 ('PI-001', 'O-001', '1234567812345678', '123', 12, 2025, 'Credit Card', '2024-11-20'),
 ('PI-002', 'O-002', '1111222233334444', '456', 11, 2025, 'Debit Card', '2024-11-19'),
