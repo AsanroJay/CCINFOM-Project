@@ -344,10 +344,10 @@ DROP TABLE IF EXISTS Paymentinfo;
 CREATE TABLE Paymentinfo (
     PaymentID VARCHAR(8) PRIMARY KEY,
     OrderID VARCHAR(8) NOT NULL,
-    CardNo VARCHAR(16) NOT NULL CHECK (LENGTH(CardNo) = 16),
-    CardCVC VARCHAR(3) NOT NULL CHECK (LENGTH(CardCVC) = 3),
-    CardExpirationMonth INT CHECK (CardExpirationMonth BETWEEN 1 AND 12),
-    CardExpirationYear INT CHECK (CardExpirationYear >= 2024),
+    CardNo VARCHAR(16) DEFAULT NULL CHECK (CardNo IS NULL OR LENGTH(CardNo) = 16),
+    CardCVC VARCHAR(3) DEFAULT NULL CHECK (CardCVC IS NULL OR LENGTH(CardCVC) = 3),
+    CardExpirationMonth INT DEFAULT NULL CHECK (CardExpirationMonth IS NULL OR (CardExpirationMonth BETWEEN 1 AND 12)),
+    CardExpirationYear INT DEFAULT NULL CHECK (CardExpirationYear IS NULL OR CardExpirationYear >= 2024),
     PaymentType VARCHAR(20) NOT NULL,
     DateOfPayment DATE NOT NULL,
     FOREIGN KEY (OrderID) REFERENCES Orders(OrderID)
@@ -379,3 +379,4 @@ INSERT INTO Paymentinfo (PaymentID, OrderID, CardNo, CardCVC, CardExpirationMont
 ('PI-020', 'O-020', NULL, NULL, NULL, NULL, 'Cash', '2024-11-01');
 /*!40000 ALTER TABLE `Paymentinfo` ENABLE KEYS */;
 UNLOCK TABLES;
+
