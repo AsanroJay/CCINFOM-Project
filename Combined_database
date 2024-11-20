@@ -34,6 +34,8 @@ INSERT INTO Category (CategoryID, CategoryName) VALUES
 ('CAT005', 'Headset'),
 ('CAT006', 'Earphones');
 /*!40000 ALTER TABLE `Category` ENABLE KEYS */;/*!40000 ALTER TABLE `Category` ENABLE KEYS */;
+UNLOCK TABLES;
+
 -- Drop table if it exists and set character 
 set for Products
 DROP TABLE IF EXISTS Products;
@@ -86,6 +88,7 @@ INSERT INTO Products (ProductID, CategoryID, ProductName, Price, QuantityInStock
 ('P029', 'CAT006', 'Sony WF-1000XM5 Truly Wireless', 7500.00, 149, '2024-10-16'),
 ('P030', 'CAT006', 'Apple AirPods Pro 2', 8500.00, 78, '2024-08-09');
 /*!40000 ALTER TABLE `Products` ENABLE KEYS */;
+UNLOCK TABLES;
 
 -- Drop table if it exists and set character set for Customers
 DROP TABLE IF EXISTS Customers;
@@ -152,6 +155,7 @@ INSERT INTO Customers (CustomerID, FirstName, LastName, BirthDate, Email, PhoneN
 ('C039', 'Celeste', 'Luna', '1981-06-09', 'celeste.luna@example.com', '09561234567', '2024-02-09', '139', 'Quezon St', '4900', 'Tacloban'),
 ('C040', 'Rafael', 'Silva', '1988-07-10', 'rafael.silva@example.com', '09571234567', '2024-02-10', '140', 'San Juan St', '5000', 'Ormoc');
 /*!40000 ALTER TABLE `Customers` ENABLE KEYS */;
+UNLOCK TABLES;
 
 -- Drop table if it exists and set character set for Orders
 DROP TABLE IF EXISTS Orders;
@@ -193,6 +197,7 @@ INSERT INTO Orders (OrderID, CustomerID, OrderDate, OrderStatus, TotalCost) VALU
 ('O-019', 'C019', '2024-04-01', 'Cancelled', 12999.95), -- p008 5
 ('O-020', 'C020', '2024-04-05', 'Processing', 8399.97); -- p004 3
 /*!40000 ALTER TABLE `Orders` ENABLE KEYS */;
+UNLOCK TABLES;
 
 -- Drop table if it exists and set character set for OrderLine
 DROP TABLE IF EXISTS OrderLine;
@@ -235,6 +240,7 @@ INSERT INTO OrderLine (OrderID, ProductID, QuantityOrder, Price, Subtotal) VALUE
 ('O-019', 'P008', 5, 2599.99, 12999.95),
 ('O-020', 'P004', 3, 2799.99, 8399.97);
 /*!40000 ALTER TABLE `OrderLine` ENABLE KEYS */;
+UNLOCK TABLES;
 
 -- Drop table if it exists and set character set for Supplier
 DROP TABLE IF EXISTS Supplier;
@@ -260,6 +266,7 @@ VALUES
 ('S-004', 'Mouse Supply Co.', 'service@mouseco.com', '09456789012'),
 ('S-005', 'GameXtreme', 'contact@gamextreme.com', '09567890123');
 /*!40000 ALTER TABLE `Supplier` ENABLE KEYS */;
+UNLOCK TABLES;
 
 -- Drop table if it exists and set character set for PurchaseOrder
 DROP TABLE IF EXISTS PurchaseOrder;
@@ -291,6 +298,7 @@ INSERT INTO PurchaseOrder (PurchaseOrderID, SupplierID, OrderDate, OrderStatus, 
 ('PO-009', 'S-004', '2024-11-09', 'Completed', 2559.99),
 ('PO-010', 'S-005', '2024-11-10', 'Cancelled', 46399.80);
 /*!40000 ALTER TABLE `PurchaseOrder` ENABLE KEYS */;
+UNLOCK TABLES;
 
 -- Drop table if it exists and set character set for PurchaseOrderLine
 DROP TABLE IF EXISTS PurchaseOrderLine;
@@ -324,6 +332,7 @@ INSERT INTO PurchaseOrderLine (PurchaseOrderLineID, ProductID, PurchaseOrderID, 
 ('POL-009', 'P009', 'PO-009', 2559.99, 1, 2559.99),
 ('POL-010', 'P010', 'PO-010', 2319.99, 20, 46399.80);
 /*!40000 ALTER TABLE `PurchaseOrderLine` ENABLE KEYS */;
+UNLOCK TABLES;
 
 -- Drop table if it exists and set character set for Paymentinfo
 DROP TABLE IF EXISTS Paymentinfo;
@@ -368,3 +377,4 @@ INSERT INTO Paymentinfo (PaymentID, OrderID, CardNo, CardCVC, CardExpirationMont
 ('PI-019', 'O-019', '5678567856785678', '777', 6, 2028, 'Credit Card', '2024-11-02'),
 ('PI-020', 'O-020', NULL, NULL, NULL, NULL, 'Cash', '2024-11-01');
 /*!40000 ALTER TABLE `Paymentinfo` ENABLE KEYS */;
+UNLOCK TABLES;
