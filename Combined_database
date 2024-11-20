@@ -37,7 +37,6 @@ INSERT INTO Category (CategoryID, CategoryName) VALUES
 UNLOCK TABLES;
 
 -- Drop table if it exists and set character 
-set for Products
 DROP TABLE IF EXISTS Products;
 /*!40101 SET @saved_cs_client = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
