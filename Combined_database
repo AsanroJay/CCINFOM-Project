@@ -24,7 +24,7 @@ CREATE TABLE Category (
 );
 
 -- Insert data into Category
-LOCK TABLES `sample` WRITE;
+LOCK TABLES `Category` WRITE;
 /*!40000 ALTER TABLE `Category` DISABLE KEYS */;
 INSERT INTO Category (CategoryID, CategoryName) VALUES
 ('CAT001', 'Monitors'),
