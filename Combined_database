@@ -208,11 +208,13 @@ CREATE TABLE OrderLine (
     OrderID VARCHAR(8),
     ProductID VARCHAR(8),
     QuantityOrder INT CHECK (QuantityOrder > 0),
+    Price DECIMAL(10, 2),
     Subtotal DECIMAL(10, 2) CHECK (Subtotal >= 0),
     PRIMARY KEY (OrderID, ProductID),
     FOREIGN KEY (OrderID) REFERENCES Orders(OrderID),
     FOREIGN KEY (ProductID) REFERENCES Products(ProductID)
 );
+
 
 -- Insert data into OrderLine
 LOCK TABLES `OrderLine` WRITE;
