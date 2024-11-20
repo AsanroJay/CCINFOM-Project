@@ -71,7 +71,7 @@ INSERT INTO Products (ProductID, CategoryID, ProductName, Price, QuantityInStock
 ('P012', 'CAT002', 'K640 TKL', 6799.99, 25, '2024-09-15'),
 ('P013', 'CAT002', 'M450 RGB', 6699.99, 30, '2024-10-01'),
 ('P014', 'CAT002', 'F350 ULTRA', 6599.99, 15, '2024-10-15'),
-('P015', 'CAT002', 'X500 PRO', 6499.99, 20, '2024-11-01');
+('P015', 'CAT002', 'X500 PRO', 6499.99, 20, '2024-11-01'),
 ('P016', 'CAT004', 'Fantech Strike Pad', 1250.00, 187, '2024-02-15'),
 ('P017', 'CAT004', 'Artisan Hien', 2900.00, 278, '2024-04-22'),
 ('P018', 'CAT004', 'Artisan Zero', 3150.00, 113, '2024-07-04'),
