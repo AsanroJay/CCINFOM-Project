@@ -1,0 +1,7 @@
+INSERT INTO Supplier (SupplierID, SupplierName, EmailAddr, PhoneNo) 
+VALUES 
+('S-001', 'John Pork Emporium', 'contact@johnpork.com', '09123456789'),
+('S-002', 'John Sloper Audio', 'info@johnsloperaudio.com', '09234567890'),
+('S-003', 'Dynaquest', 'support@dynaquest.com', '09345678901'),
+('S-004', 'Mouse Supply Co.', 'service@mouseco.com', '09456789012'),
+('S-005', 'GameXtreme', 'contact@gamextreme.com', '09567890123');
