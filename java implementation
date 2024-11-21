@@ -1,0 +1,81 @@
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.Scanner;
+
+public class DBapp {
+    public static void main(String[] args) {
+        String url = "jdbc:mysql://localhost:3306/CCINFOM_STORE";
+        String user = "root";
+        String password = "enter password";
+
+        // Initialize scanner for user input
+        Scanner scanner = new Scanner(System.in);
+
+        try (Connection connection = DriverManager.getConnection(url, user, password)) {
+            System.out.println("Connection Successful");
+
+            // Ask user what they want to see
+            System.out.println("What would you like to see?");
+            System.out.println("1. Products");
+            System.out.println("2. Categories");
+            int choice = scanner.nextInt();
+            scanner.nextLine();  // Consume newline
+
+            if (choice == 1) {
+                displayProducts(connection);
+            } else if (choice == 2) {
+                displayCategories(connection);
+            } else {
+                System.out.println("Invalid choice.");
+            }
+
+        } catch (SQLException e) {
+            System.out.println("Error: " + e.getMessage());
+        } finally {
+            scanner.close(); // Close the scanner
+        }
+    }
+
+    // Method to display products
+    public static void displayProducts(Connection connection) throws SQLException {
+        String selectSQL = "SELECT * FROM Products";
+        PreparedStatement selectStatement = connection.prepareStatement(selectSQL);
+        ResultSet resultSet = selectStatement.executeQuery();
+
+        while (resultSet.next()) {
+            String productId = resultSet.getString("ProductID");
+            String categoryId = resultSet.getString("CategoryID");
+            String productName = resultSet.getString("ProductName");
+            java.math.BigDecimal price = resultSet.getBigDecimal("Price");
+            int quantity = resultSet.getInt("QuantityInStock");
+            java.sql.Date dateAdded = resultSet.getDate("DateAdded");
+
+            System.out.println("Product ID: " + productId);
+            System.out.println("Category ID: " + categoryId);
+            System.out.println("Product Name: " + productName);
+            System.out.println("Price: " + price);
+            System.out.println("Quantity: " + quantity);
+            System.out.println("Date Added: " + dateAdded);
+            System.out.println("---------------------------");
+        }
+    }
+
+    // Method to display categories
+    public static void displayCategories(Connection connection) throws SQLException {
+        String selectSQL = "SELECT * FROM Category";
+        PreparedStatement selectStatement = connection.prepareStatement(selectSQL);
+        ResultSet resultSet = selectStatement.executeQuery();
+
+        while (resultSet.next()) {
+            String categoryId = resultSet.getString("CategoryID");
+            String categoryName = resultSet.getString("CategoryName");
+
+            System.out.println("Category ID: " + categoryId);
+            System.out.println("Category Name: " + categoryName);
+            System.out.println("---------------------------");
+        }
+    }
+}
