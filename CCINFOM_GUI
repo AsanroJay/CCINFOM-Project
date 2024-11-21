@@ -1,0 +1,131 @@
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.sql.*;
+
+public class DBappgui {
+
+    private static final String DB_URL = "jdbc:mysql://localhost:3306/CCINFOM_STORE";
+    private static final String USER = "root";
+    private static final String PASSWORD = "Newpassword123?";
+
+    public static void main(String[] args) {
+        JFrame frame = new JFrame("Database Viewer");
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setSize(900, 700);
+
+        JPanel panel = new JPanel();
+        panel.setLayout(new BorderLayout());
+
+        JTextArea textArea = new JTextArea();
+        textArea.setEditable(false);
+        JScrollPane scrollPane = new JScrollPane(textArea);
+        panel.add(scrollPane, BorderLayout.CENTER);
+
+        JPanel buttonPanel = new JPanel();
+        buttonPanel.setLayout(new GridLayout(4, 2));
+
+        String[] buttons = {
+                "Transaction 1: Add Product to Inventory",
+                "Transaction 2: Place Customer Order",
+                "Transaction 3: Restock Inventory",
+                "Transaction 4: Complete Customer Purchase",
+                "Report 1: Supplier and Product Inventory",
+                "Report 2: Customer Order Summary",
+                "Report 3: Product Sales Performance",
+                "Report 4: Purchase Order Summary"
+        };
+
+        for (String buttonName : buttons) {
+            JButton button = new JButton(buttonName);
+            button.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    handleAction(buttonName, textArea);
+                }
+            });
+            buttonPanel.add(button);
+        }
+
+        panel.add(buttonPanel, BorderLayout.SOUTH);
+        frame.add(panel);
+
+        frame.setVisible(true);
+    }
+
+    private static void handleAction(String action, JTextArea textArea) {
+        try (Connection connection = DriverManager.getConnection(DB_URL, USER, PASSWORD)) {
+            switch (action) {
+                case "Transaction 1: Add Product to Inventory":
+                    executeTransaction1(connection, textArea);
+                    break;
+                case "Transaction 2: Place Customer Order":
+                    executeTransaction2(connection, textArea);
+                    break;
+                case "Transaction 3: Restock Inventory":
+                    executeTransaction3(connection, textArea);
+                    break;
+                case "Transaction 4: Complete Customer Purchase":
+                    executeTransaction4(connection, textArea);
+                    break;
+                case "Report 1: Supplier and Product Inventory":
+                    generateReport1(connection, textArea);
+                    break;
+                case "Report 2: Customer Order Summary":
+                    generateReport2(connection, textArea);
+                    break;
+                case "Report 3: Product Sales Performance":
+                    generateReport3(connection, textArea);
+                    break;
+                case "Report 4: Purchase Order Summary":
+                    generateReport4(connection, textArea);
+                    break;
+                default:
+                    textArea.setText("Invalid action.");
+            }
+        } catch (SQLException ex) {
+            textArea.setText("Error: " + ex.getMessage());
+        }
+    }
+
+    private static void executeTransaction1(Connection connection, JTextArea textArea) throws SQLException {
+        // Add logic for Transaction 1
+        textArea.setText("Transaction 1: Add Product to Inventory executed.");
+    }
+
+    private static void executeTransaction2(Connection connection, JTextArea textArea) throws SQLException {
+        // Add logic for Transaction 2
+        textArea.setText("Transaction 2: Place Customer Order executed.");
+    }
+
+    private static void executeTransaction3(Connection connection, JTextArea textArea) throws SQLException {
+        // Add logic for Transaction 3
+        textArea.setText("Transaction 3: Restock Inventory executed.");
+    }
+
+    private static void executeTransaction4(Connection connection, JTextArea textArea) throws SQLException {
+        // Add logic for Transaction 4
+        textArea.setText("Transaction 4: Complete Customer Purchase executed.");
+    }
+
+    private static void generateReport1(Connection connection, JTextArea textArea) throws SQLException {
+        // Add logic for Report 1
+        textArea.setText("Report 1: Supplier and Product Inventory generated.");
+    }
+
+    private static void generateReport2(Connection connection, JTextArea textArea) throws SQLException {
+        // Add logic for Report 2
+        textArea.setText("Report 2: Customer Order Summary generated.");
+    }
+
+    private static void generateReport3(Connection connection, JTextArea textArea) throws SQLException {
+        // Add logic for Report 3
+        textArea.setText("Report 3: Product Sales Performance generated.");
+    }
+
+    private static void generateReport4(Connection connection, JTextArea textArea) throws SQLException {
+        // Add logic for Report 4
+        textArea.setText("Report 4: Purchase Order Summary generated.");
+    }
+}
