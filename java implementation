@@ -9,27 +9,55 @@ public class DBapp {
     public static void main(String[] args) {
         String url = "jdbc:mysql://localhost:3306/CCINFOM_STORE";
         String user = "root";
-        String password = "enter password";
+        String password = "Newpassword123?";
 
-        // Initialize scanner for user input
         Scanner scanner = new Scanner(System.in);
 
         try (Connection connection = DriverManager.getConnection(url, user, password)) {
             System.out.println("Connection Successful");
-
-            // Ask user what they want to see
             System.out.println("What would you like to see?");
             System.out.println("1. Products");
             System.out.println("2. Categories");
+            System.out.println("3. Customers");
+            System.out.println("4. Orders");
+            System.out.println("5. Order Lines");
+            System.out.println("6. Suppliers");
+            System.out.println("7. Purchase Orders");
+            System.out.println("8. Purchase Order Lines");
+            System.out.println("9. Payment Info");
             int choice = scanner.nextInt();
             scanner.nextLine();  // Consume newline
 
-            if (choice == 1) {
-                displayProducts(connection);
-            } else if (choice == 2) {
-                displayCategories(connection);
-            } else {
-                System.out.println("Invalid choice.");
+            switch (choice) {
+                case 1:
+                    displayProducts(connection);
+                    break;
+                case 2:
+                    displayCategories(connection);
+                    break;
+                case 3:
+                    displayCustomers(connection);
+                    break;
+                case 4:
+                    displayOrders(connection);
+                    break;
+                case 5:
+                    displayOrderLines(connection);
+                    break;
+                case 6:
+                    displaySuppliers(connection);
+                    break;
+                case 7:
+                    displayPurchaseOrders(connection);
+                    break;
+                case 8:
+                    displayPurchaseOrderLines(connection);
+                    break;
+                case 9:
+                    displayPaymentInfo(connection);
+                    break;
+                default:
+                    System.out.println("Invalid choice.");
             }
 
         } catch (SQLException e) {
@@ -39,7 +67,6 @@ public class DBapp {
         }
     }
 
-    // Method to display products
     public static void displayProducts(Connection connection) throws SQLException {
         String selectSQL = "SELECT * FROM Products";
         PreparedStatement selectStatement = connection.prepareStatement(selectSQL);
@@ -63,7 +90,6 @@ public class DBapp {
         }
     }
 
-    // Method to display categories
     public static void displayCategories(Connection connection) throws SQLException {
         String selectSQL = "SELECT * FROM Category";
         PreparedStatement selectStatement = connection.prepareStatement(selectSQL);
@@ -78,4 +104,169 @@ public class DBapp {
             System.out.println("---------------------------");
         }
     }
+
+    public static void displayCustomers(Connection connection) throws SQLException {
+        String selectSQL = "SELECT * FROM Customers";
+        PreparedStatement selectStatement = connection.prepareStatement(selectSQL);
+        ResultSet resultSet = selectStatement.executeQuery();
+
+        while (resultSet.next()) {
+            String customerId = resultSet.getString("CustomerID");
+            String firstName = resultSet.getString("FirstName");
+            String lastName = resultSet.getString("LastName");
+            java.sql.Date birthDate = resultSet.getDate("BirthDate");
+            String email = resultSet.getString("Email");
+            String phoneNo = resultSet.getString("PhoneNo");
+            java.sql.Date creationDate = resultSet.getDate("CreationDate");
+            String houseNo = resultSet.getString("HouseNo");
+            String street = resultSet.getString("Street");
+            String postalCode = resultSet.getString("PostalCode");
+            String city = resultSet.getString("City");
+
+            System.out.println("Customer ID: " + customerId);
+            System.out.println("First Name: " + firstName);
+            System.out.println("Last Name: " + lastName);
+            System.out.println("Birth Date: " + birthDate);
+            System.out.println("Email: " + email);
+            System.out.println("Phone No: " + phoneNo);
+            System.out.println("Creation Date: " + creationDate);
+            System.out.println("House No: " + houseNo);
+            System.out.println("Street: " + street);
+            System.out.println("Postal Code: " + postalCode);
+            System.out.println("City: " + city);
+            System.out.println("---------------------------");
+        }
+    }
+
+    public static void displayOrders(Connection connection) throws SQLException {
+        String selectSQL = "SELECT * FROM Orders";
+        PreparedStatement selectStatement = connection.prepareStatement(selectSQL);
+        ResultSet resultSet = selectStatement.executeQuery();
+
+        while (resultSet.next()) {
+            String orderId = resultSet.getString("OrderID");
+            String customerId = resultSet.getString("CustomerID");
+            java.sql.Date orderDate = resultSet.getDate("OrderDate");
+            String orderStatus = resultSet.getString("OrderStatus");
+            java.math.BigDecimal totalCost = resultSet.getBigDecimal("TotalCost");
+
+            System.out.println("Order ID: " + orderId);
+            System.out.println("Customer ID: " + customerId);
+            System.out.println("Order Date: " + orderDate);
+            System.out.println("Order Status: " + orderStatus);
+            System.out.println("Total Cost: " + totalCost);
+            System.out.println("---------------------------");
+        }
+    }
+
+    public static void displayOrderLines(Connection connection) throws SQLException {
+        String selectSQL = "SELECT * FROM OrderLine";
+        PreparedStatement selectStatement = connection.prepareStatement(selectSQL);
+        ResultSet resultSet = selectStatement.executeQuery();
+
+        while (resultSet.next()) {
+            String orderId = resultSet.getString("OrderID");
+            String productId = resultSet.getString("ProductID");
+            int quantityOrder = resultSet.getInt("QuantityOrder");
+            java.math.BigDecimal price = resultSet.getBigDecimal("Price");
+            java.math.BigDecimal subtotal = resultSet.getBigDecimal("Subtotal");
+
+            System.out.println("Order ID: " + orderId);
+            System.out.println("Product ID: " + productId);
+            System.out.println("Quantity Ordered: " + quantityOrder);
+            System.out.println("Price: " + price);
+            System.out.println("Subtotal: " + subtotal);
+            System.out.println("---------------------------");
+        }
+    }
+
+    public static void displaySuppliers(Connection connection) throws SQLException {
+        String selectSQL = "SELECT * FROM Supplier";
+        PreparedStatement selectStatement = connection.prepareStatement(selectSQL);
+        ResultSet resultSet = selectStatement.executeQuery();
+
+        while (resultSet.next()) {
+            String supplierId = resultSet.getString("SupplierID");
+            String supplierName = resultSet.getString("SupplierName");
+            String emailAddr = resultSet.getString("EmailAddr");
+            String phoneNo = resultSet.getString("PhoneNo");
+
+            System.out.println("Supplier ID: " + supplierId);
+            System.out.println("Supplier Name: " + supplierName);
+            System.out.println("Email Address: " + emailAddr);
+            System.out.println("Phone No: " + phoneNo);
+            System.out.println("---------------------------");
+        }
+    }
+
+    public static void displayPurchaseOrders(Connection connection) throws SQLException {
+        String selectSQL = "SELECT * FROM PurchaseOrder";
+        PreparedStatement selectStatement = connection.prepareStatement(selectSQL);
+        ResultSet resultSet = selectStatement.executeQuery();
+
+        while (resultSet.next()) {
+            String purchaseOrderId = resultSet.getString("PurchaseOrderID");
+            String supplierId = resultSet.getString("SupplierID");
+            java.sql.Date orderDate = resultSet.getDate("OrderDate");
+            String orderStatus = resultSet.getString("OrderStatus");
+            java.math.BigDecimal totalCost = resultSet.getBigDecimal("TotalCost");
+
+            System.out.println("Purchase Order ID: " + purchaseOrderId);
+            System.out.println("Supplier ID: " + supplierId);
+            System.out.println("Order Date: " + orderDate);
+            System.out.println("Order Status: " + orderStatus);
+            System.out.println("Total Cost: " + totalCost);
+            System.out.println("---------------------------");
+        }
+    }
+
+    public static void displayPurchaseOrderLines(Connection connection) throws SQLException {
+      String selectSQL = "SELECT * FROM PurchaseOrderLine";
+      PreparedStatement selectStatement = connection.prepareStatement(selectSQL);
+      ResultSet resultSet = selectStatement.executeQuery();
+
+      while (resultSet.next()) {
+          String purchaseOrderLineId = resultSet.getString("PurchaseOrderLineID");
+          String productId = resultSet.getString("ProductID");
+          String purchaseOrderId = resultSet.getString("PurchaseOrderID");
+          java.math.BigDecimal cost = resultSet.getBigDecimal("Cost");
+          int quantity = resultSet.getInt("Quantity");
+          java.math.BigDecimal subtotal = resultSet.getBigDecimal("Subtotal");
+
+          System.out.println("Purchase Order Line ID: " + purchaseOrderLineId);
+          System.out.println("Product ID: " + productId);
+          System.out.println("Purchase Order ID: " + purchaseOrderId);
+          System.out.println("Cost: " + cost);
+          System.out.println("Quantity: " + quantity);
+          System.out.println("Subtotal: " + subtotal);
+          System.out.println("---------------------------");
+      }
+  }
+
+  public static void displayPaymentInfo(Connection connection) throws SQLException {
+      String selectSQL = "SELECT * FROM Paymentinfo";
+      PreparedStatement selectStatement = connection.prepareStatement(selectSQL);
+      ResultSet resultSet = selectStatement.executeQuery();
+
+      while (resultSet.next()) {
+          String paymentId = resultSet.getString("PaymentID");
+          String orderId = resultSet.getString("OrderID");
+          String cardNo = resultSet.getString("CardNo");
+          String cardCVC = resultSet.getString("CardCVC");
+          int cardExpirationMonth = resultSet.getInt("CardExpirationMonth");
+          int cardExpirationYear = resultSet.getInt("CardExpirationYear");
+          String paymentType = resultSet.getString("PaymentType");
+          java.sql.Date dateOfPayment = resultSet.getDate("DateOfPayment");
+
+          System.out.println("Payment ID: " + paymentId);
+          System.out.println("Order ID: " + orderId);
+          System.out.println("Card No: " + cardNo);
+          System.out.println("Card CVC: " + cardCVC);
+          System.out.println("Card Expiration Month: " + cardExpirationMonth);
+          System.out.println("Card Expiration Year: " + cardExpirationYear);
+          System.out.println("Payment Type: " + paymentType);
+          System.out.println("Date Of Payment: " + dateOfPayment);
+          System.out.println("---------------------------");
+      }
+  }
 }
