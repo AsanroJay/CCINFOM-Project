@@ -5,11 +5,11 @@ import java.awt.event.ActionListener;
 import java.sql.*;
 import java.util.Scanner;
 
-public class DBappgui {
+public class NewUpdate {
 
     private static final String DB_URL = "jdbc:mysql://localhost:3306/CCINFOM_STORE";
     private static final String USER = "root";
-    private static final String PASSWORD = "password";
+    private static final String PASSWORD = "Cactusboi123.";
 
     public static void main(String[] args) {
         JFrame frame = new JFrame("Database Viewer");
@@ -272,10 +272,278 @@ String supplierId = selectedSupplier.split(": ")[0];
 
 
 
-    private static void executeTransaction2(Connection connection, JTextArea textArea) throws SQLException {
-        // Add logic for Transaction 2
-        textArea.setText("Transaction 2: Place Customer Order executed.");
+private static void executeTransaction2(Connection connection, JTextArea textArea) {
+    try {
+        // Step 1: Show Existing Customer IDs and Identify Customer
+        String customerQuery = "SELECT CustomerID FROM Customers";
+        PreparedStatement customerStmt = connection.prepareStatement(customerQuery);
+        ResultSet customerResult = customerStmt.executeQuery();
+
+        // Create a JComboBox to hold Customer IDs
+        JComboBox<String> customerDropdown = new JComboBox<>();
+        while (customerResult.next()) {
+            customerDropdown.addItem(customerResult.getString("CustomerID"));
+        }
+
+        // Show dialog with JComboBox for selecting Customer ID
+        JPanel customerPanel = new JPanel();
+        customerPanel.add(customerDropdown);
+        int customerResultOption = JOptionPane.showConfirmDialog(null, customerPanel, "Select Customer ID",
+                JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+        if (customerResultOption != JOptionPane.OK_OPTION) {
+            textArea.setText("Transaction canceled.");
+            connection.rollback();
+            return;
+        }
+
+        String customerId = (String) customerDropdown.getSelectedItem();
+        if (customerId == null || customerId.trim().isEmpty()) {
+            textArea.setText("Transaction canceled.");
+            connection.rollback();
+            return;
+        }
+
+        // Check if the customer exists
+        customerQuery = "SELECT * FROM Customers WHERE CustomerID = ?";
+        customerStmt = connection.prepareStatement(customerQuery);
+        customerStmt.setString(1, customerId);
+        customerResult = customerStmt.executeQuery();
+
+        if (!customerResult.next()) {
+            textArea.append("Customer not found.\n");
+            connection.rollback();
+            return;
+        }
+
+        // Step 2: Retrieve and increment the last Order ID
+        String latestOrderQuery = "SELECT OrderID FROM Orders ORDER BY OrderID DESC LIMIT 1";
+        PreparedStatement latestOrderStmt = connection.prepareStatement(latestOrderQuery);
+        ResultSet latestOrderResult = latestOrderStmt.executeQuery();
+
+        String orderId = "O-001"; // Default if no orders exist
+        if (latestOrderResult.next()) {
+            String lastOrderId = latestOrderResult.getString("OrderID");
+            int newOrderIdNum = Integer.parseInt(lastOrderId.substring(2)) + 1; // Increment the numeric part
+            orderId = "O-" + String.format("%03d", newOrderIdNum); // Format with leading zeros
+        }
+
+        String orderStatus = "Processing"; // Default order status
+
+        insertOrder2(connection, orderId, customerId, orderStatus, 0.0); // Insert initial order with totalCost as
+                                                                         // 0.0
+
+        // Step 3: Loop to Add Multiple Products
+        double totalCost = 0.0;
+        boolean addMoreProducts = true;
+
+        while (addMoreProducts) {
+            // Show Existing Product IDs and Prompt for ProductID
+            String productQuery = "SELECT ProductID, Price, QuantityInStock FROM Products";
+            PreparedStatement productStmt = connection.prepareStatement(productQuery);
+            ResultSet productResult = productStmt.executeQuery();
+
+            // Create a JComboBox to hold Product IDs
+            JComboBox<String> productDropdown = new JComboBox<>();
+            while (productResult.next()) {
+                productDropdown.addItem(productResult.getString("ProductID"));
+            }
+
+            // Show dialog with JComboBox for selecting Product ID
+            JPanel productPanel = new JPanel();
+            productPanel.add(productDropdown);
+            int productResultOption = JOptionPane.showConfirmDialog(null, productPanel, "Select Product ID",
+                    JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+            if (productResultOption != JOptionPane.OK_OPTION) {
+                textArea.setText("Transaction canceled.");
+                connection.rollback();
+                return;
+            }
+
+            String productId = (String) productDropdown.getSelectedItem();
+            if (productId == null || productId.trim().isEmpty()) {
+                textArea.setText("Transaction canceled.");
+                connection.rollback();
+                return;
+            }
+
+            productQuery = "SELECT Price, QuantityInStock FROM Products WHERE ProductID = ?";
+            productStmt = connection.prepareStatement(productQuery);
+            productStmt.setString(1, productId);
+            productResult = productStmt.executeQuery();
+
+            double price = 0.0;
+            int quantityInStock = 0;
+            if (productResult.next()) {
+                price = productResult.getDouble("Price");
+                quantityInStock = productResult.getInt("QuantityInStock");
+            }
+
+            int quantity = 0;
+            boolean validQuantity = false;
+            while (!validQuantity) {
+                quantity = Integer.parseInt(JOptionPane.showInputDialog(null, "Enter Quantity:"));
+                if (quantity > quantityInStock) {
+                    JOptionPane.showMessageDialog(null,
+                            "Quantity entered exceeds the available stock. Please re-enter quantity.");
+                } else {
+                    validQuantity = true;
+                }
+            }
+
+            totalCost += price * quantity;
+
+            // Insert Order Line
+            insertOrderLine2(connection, orderId, productId, quantity);
+
+            int addMoreOption = JOptionPane.showConfirmDialog(null, "Do you want to add more products?",
+                    "Add More Products", JOptionPane.YES_NO_OPTION);
+            if (addMoreOption != JOptionPane.YES_OPTION) {
+                addMoreProducts = false;
+            }
+        }
+
+        // Update the total cost in the order
+        updateOrderTotalCost2(connection, orderId, totalCost);
+
+        // Step 4: Retrieve and increment the last Payment ID
+        String latestPaymentQuery = "SELECT PaymentID FROM PaymentInfo ORDER BY PaymentID DESC LIMIT 1";
+        PreparedStatement latestPaymentStmt = connection.prepareStatement(latestPaymentQuery);
+        ResultSet latestPaymentResult = latestPaymentStmt.executeQuery();
+
+        String paymentId = "PI-001"; // Default if no payments exist
+        if (latestPaymentResult.next()) {
+            String lastPaymentId = latestPaymentResult.getString("PaymentID");
+            int newPaymentIdNum = Integer.parseInt(lastPaymentId.substring(3)) + 1; // Increment the numeric part
+            paymentId = "PI-" + String.format("%03d", newPaymentIdNum); // Format with leading zeros
+        }
+
+        // Prompt for payment type
+        String[] paymentTypes = { "Credit Card", "Debit Card", "Cash" };
+        JComboBox<String> paymentTypeDropdown = new JComboBox<>(paymentTypes);
+        JPanel paymentTypePanel = new JPanel();
+        paymentTypePanel.add(paymentTypeDropdown);
+        int paymentTypeResultOption = JOptionPane.showConfirmDialog(null, paymentTypePanel, "Select Payment Type",
+                JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+
+        if (paymentTypeResultOption != JOptionPane.OK_OPTION) {
+            textArea.setText("Transaction canceled.");
+            connection.rollback();
+            return;
+        }
+
+        String paymentType = (String) paymentTypeDropdown.getSelectedItem();
+        if (paymentType == null || paymentType.trim().isEmpty()) {
+            textArea.setText("Transaction canceled.");
+            connection.rollback();
+            return;
+        }
+
+        String cardNumber = null;
+        String cardCvc = null;
+        String expirationMonth = null;
+        String expirationYear = null;
+
+        if (!paymentType.equals("Cash")) {
+            boolean validCardDetails = false;
+            while (!validCardDetails) {
+
+                cardNumber = JOptionPane.showInputDialog(null, "Enter Card Number:");
+                if (cardNumber == null || cardNumber.length() != 16) {
+                    JOptionPane.showMessageDialog(null, "Invalid Card Number. Please re-enter.");
+                    continue;
+                }
+                cardCvc = JOptionPane.showInputDialog(null, "Enter Card CVC:");
+                if (cardCvc == null || cardCvc.length() != 3) {
+                    JOptionPane.showMessageDialog(null, "Invalid CVC. Please re-enter.");
+                    continue;
+                }
+                expirationMonth = JOptionPane.showInputDialog(null, "Enter Expiration Month (MM):");
+                int month = Integer.parseInt(expirationMonth);
+                if (expirationMonth == null || month < 1 || month > 12) {
+                    JOptionPane.showMessageDialog(null, "Invalid Expiration Month. Please re-enter.");
+                    continue;
+                }
+                expirationYear = JOptionPane.showInputDialog(null, "Enter Expiration Year (YYYY):");
+                int year = Integer.parseInt(expirationYear);
+                if (expirationYear == null || year < 2024) {
+                    JOptionPane.showMessageDialog(null, "Invalid Expiration Year. Please re-enter.");
+                    continue;
+                }
+                validCardDetails = true;
+            }
+        }
+
+        insertPaymentInfo2(connection, paymentId, orderId, totalCost, cardNumber, cardCvc, expirationMonth,
+                expirationYear, paymentType);
+
+        // Commit the transaction
+
+    } catch (SQLException e) {
+        e.printStackTrace();
+        textArea.setText("FUCK YOU IT FAILED SQL ERROR");
+    } catch (NumberFormatException ex) {
+        textArea.append("Error: FUCK YOU INVALID INPUT");
     }
+
+}
+
+private static void insertOrderLine2(Connection connection, String orderId, String productId, int quantity)
+        throws SQLException {
+    String query = "INSERT INTO OrderLine (OrderID, ProductID, QuantityOrder, Price, Subtotal) VALUES (?, ?, ?, (SELECT Price FROM Products WHERE ProductID = ?), (SELECT Price * ? FROM Products WHERE ProductID = ?))";
+    try (PreparedStatement statement = connection.prepareStatement(query)) {
+        statement.setString(1, orderId);
+        statement.setString(2, productId);
+        statement.setInt(3, quantity);
+        statement.setString(4, productId);
+        statement.setInt(5, quantity);
+        statement.setString(6, productId);
+        statement.executeUpdate();
+    }
+}
+
+private static void insertOrder2(Connection connection, String orderId, String customerId, String orderStatus,
+        double totalCost) throws SQLException {
+    String query = "INSERT INTO Orders (OrderID, CustomerID, OrderDate, OrderStatus, TotalCost) VALUES (?, ?, NOW(), ?, ?)";
+    try (PreparedStatement statement = connection.prepareStatement(query)) {
+        statement.setString(1, orderId);
+        statement.setString(2, customerId);
+        statement.setString(3, orderStatus);
+        statement.setDouble(4, totalCost);
+        statement.executeUpdate();
+    }
+}
+
+private static void updateOrderTotalCost2(Connection connection, String orderId, double totalCost)
+        throws SQLException {
+    String query = "UPDATE Orders SET TotalCost = ? WHERE OrderID = ?";
+    try (PreparedStatement statement = connection.prepareStatement(query)) {
+        statement.setDouble(1, totalCost);
+        statement.setString(2, orderId);
+        statement.executeUpdate();
+    }
+}
+
+private static void insertPaymentInfo2(Connection connection, String paymentId, String orderId, double totalCost,
+        String cardNumber, String cardCvc, String expirationMonth, String expirationYear,
+        String paymentType) throws SQLException {
+    String sql = "INSERT INTO Paymentinfo (PaymentID, OrderID, CardNo, CardCVC, CardExpirationMonth, CardExpirationYear, PaymentType, DateOfPayment) "
+            +
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+    try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+        stmt.setString(1, paymentId);
+        stmt.setString(2, orderId);
+        stmt.setString(3, cardNumber); // Null if cash
+        stmt.setString(4, cardCvc); // Null if cash
+        stmt.setObject(5, expirationMonth != null ? Integer.parseInt(expirationMonth) : null,
+                java.sql.Types.INTEGER); // Null if cash
+        stmt.setObject(6, expirationYear != null ? Integer.parseInt(expirationYear) : null, java.sql.Types.INTEGER); // Null
+                                                                                                                     // if
+                                                                                                                     // cash
+        stmt.setString(7, paymentType);
+        stmt.setDate(8, new java.sql.Date(System.currentTimeMillis())); // Current date
+        stmt.executeUpdate();
+    }
+}
 
     private static void executeTransaction3(Connection connection, JTextArea textArea) throws SQLException {
         // Add logic for Transaction 3
@@ -468,19 +736,53 @@ String supplierId = selectedSupplier.split(": ")[0];
     
     
     
-    
-    
-    
-    
-    
-    
-    
-    
-
     private static void generateReport2(Connection connection, JTextArea textArea) throws SQLException {
-        // Add logic for Report 2
-        textArea.setText("Report 2: Customer Order Summary generated.");
+        String query = "SELECT c.FirstName, c.LastName, c.Email, o.OrderID, o.OrderDate, o.TotalCost, p.PaymentType " +
+                       "FROM Customers c " +
+                       "JOIN Orders o ON c.CustomerID = o.CustomerID " +
+                       "JOIN PaymentInfo p ON o.OrderID = p.OrderID " +
+                       "ORDER BY c.LastName, c.FirstName, o.OrderDate";
+
+        try (PreparedStatement statement = connection.prepareStatement(query);
+             ResultSet resultSet = statement.executeQuery()) {
+
+            StringBuilder report = new StringBuilder();
+            String currentCustomerName = "";
+            
+            while (resultSet.next()) {
+                String firstName = resultSet.getString("FirstName");
+                String lastName = resultSet.getString("LastName");
+                String email = resultSet.getString("Email");
+                String orderId = resultSet.getString("OrderID");
+                String orderDate = resultSet.getString("OrderDate");
+                double totalCost = resultSet.getDouble("TotalCost");
+                String paymentType = resultSet.getString("PaymentType");
+                
+                String customerName = firstName + " " + lastName;
+                
+                // Append customer details to the report
+                if (!customerName.equals(currentCustomerName)) {
+                    if (!currentCustomerName.isEmpty()) {
+                        report.append("\n");
+                    }
+                    report.append("Customer: ").append(customerName).append("\n");
+                    report.append("Email: ").append(email).append("\n");
+                    currentCustomerName = customerName;
+                }
+                
+                // Append order details to the report
+                report.append("    Order ID: ").append(orderId).append("\n");
+                report.append("    Order Date: ").append(orderDate).append("\n");
+                report.append("    Total Cost: ").append(totalCost).append("\n");
+                report.append("    Payment Method: ").append(paymentType).append("\n");
+                report.append("\n");
+            }
+            
+            textArea.setText(report.toString());
+        }
     }
+
+    
 
     private static void generateReport3(Connection connection, JTextArea textArea) throws SQLException {
         // Add logic for Report 3
