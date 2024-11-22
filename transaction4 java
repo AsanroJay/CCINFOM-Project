@@ -1,139 +1,101 @@
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.Scanner;
 
-public class Dbapp {
-    
-    //fields of products
-    public String product_id;
-    public int product_quantity;
-    /*
-    doesn't use the other attributes
-    public String product_category;
-    public String product_name;
-    public int price;
-    public String product_dateAdd;
-    */
-    
-    //fields of orders
-    public String order_id;
-    /*
-    public String order_customer;
-    public String order_date;
-    public String order_status;
-    public int order_totalCost;
-    */
-    
-    //fields of order line
-    public String orderl_id;
-    public int orderl_price;
-    public String orderl_productid;
-    public int orderl_quantity;
-    public int orderl_subtotal;
+    private static void executeTransaction4(Connection connection, JTextArea textArea) throws SQLException {
+        // Add logic for Transaction 4
+       
+        try {
+        // Step 1: Show Existing Order IDs in a Dropdown
+        String orderQuery = "SELECT OrderID FROM Orders";
+        PreparedStatement orderStmt = connection.prepareStatement(orderQuery);
+        ResultSet orderResult = orderStmt.executeQuery();
 
-    //fields of payment info
-    public String payinfo_cvc;
-    public int payinfo_exprdmonth;
-    public int payinfo_exprdyear;
-    public String payinfo_cardnum;
-    public String payinfo_datepay;
-    public String payinfo_orderid;
-    public String payinfo_paymentid;
-    public String payinfo_paymenttype;   
-    
-    public Dbapp(){}
-    
-    public int Transaction4() {
-        try
-        {
-            Connection conn;
-            String url = "jdbc:mysql://localhost:3306/CCINFOM_STORE";
-            String user = "root";
-            String password = "1234";
-            conn = DriverManager.getConnection(url, user, password);
-            System.out.println("Connection Successful");
-            
-            //SQL statements
-            // display products table
-            PreparedStatement pstmt = conn.prepareStatement("SELECT * FROM Products");
-            ResultSet rst = pstmt.executeQuery();
-        
-            // 1. update quantity in stock                
-            pstmt = conn.prepareStatement("UPDATE Products SET QuantityInStock = QuantityInStock - ? WHERE ProductID = ?");
-            pstmt.setInt(1, product_quantity);
-            pstmt.setString(2, product_id);
-            pstmt.executeUpdate();      //function for queries
-            
-            // 2. update status as completed                
-            pstmt = conn.prepareStatement("UPDATE Orders SET OrderStatus = 'Shipped' WHERE OrderID = ?");
-            pstmt.setString(1, order_id); 
-            pstmt.executeUpdate();      //function for editing
-            
-            // 3. records the specific products and quantities purchased
-            pstmt = conn.prepareStatement("INSERT INTO OrderLine (OrderID, ProductID, QuantityOrder, Price, Subtotal) VALUES (?, ?, ?, ?, ?)");
-            pstmt.setString(1, orderl_id);          // 1st question mark
-            pstmt.setString(2, orderl_productid);   // 2nd question mark
-            pstmt.setInt(3, orderl_quantity);
-            pstmt.setInt(4, orderl_price);
-            pstmt.setInt(5, orderl_subtotal);
-            pstmt.executeUpdate();
-            
-            
-            // 4. confirms the payment details for the completed purchase.
-            pstmt = conn.prepareStatement("INSERT INTO PaymentInfo (PaymentID, OrderID, CardNo, CardCVC, CardExpirationMonth, CardExpirationYear, PaymentType, DateOfPayment) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
-            pstmt.setString(1, payinfo_paymentid);
-            pstmt.setString(2, payinfo_orderid);
-            pstmt.setString(3, payinfo_cardnum);
-            pstmt.setString(4, payinfo_cvc);
-            pstmt.setInt(5, payinfo_exprdmonth);
-            pstmt.setInt(6, payinfo_exprdyear);
-            pstmt.setString(7, payinfo_paymenttype);
-            pstmt.setString(8, payinfo_datepay);
-            pstmt.executeUpdate();
-            pstmt.close();
-            conn.close();      
-            return 1;
+        JComboBox<String> orderComboBox = new JComboBox<>();
+        while (orderResult.next()) {
+            String orderId = orderResult.getString("OrderID");
+            orderComboBox.addItem(orderId);
+        }
 
-        } catch (Exception e) {
-            System.out.println(e.getMessage());
-            return 0;
-        }         
-        
+        int orderSelection = JOptionPane.showConfirmDialog(
+                null,
+                orderComboBox,
+                "Select Order ID",
+                JOptionPane.OK_CANCEL_OPTION
+        );
+
+        if (orderSelection != JOptionPane.OK_OPTION) {
+            textArea.setText("Operation canceled.\n");
+            return;
+        }
+
+        String selectedOrderId = (String) orderComboBox.getSelectedItem();
+
+        // Step 2: Prompt the User to Choose the Order Status
+        Object[] options = {"Cancel Order", "Mark as Delivered"};
+        int statusSelection = JOptionPane.showOptionDialog(
+                null,
+                "What would you like to do with Order ID: " + selectedOrderId + "?",
+                "Update Order Status",
+                JOptionPane.YES_NO_OPTION,
+                JOptionPane.QUESTION_MESSAGE,
+                null,
+                options,
+                options[0]
+        );
+
+        if (statusSelection == JOptionPane.CLOSED_OPTION) {
+            textArea.setText("No action taken for Order ID: " + selectedOrderId + ".\n");
+            return;
+        }
+
+        String newStatus;
+        if (statusSelection == 0) { // Cancel Order
+            newStatus = "Cancelled";
+        } else { // Mark as Delivered
+            newStatus = "Delivered";
+        }
+
+        // Step 3: Update the Order Status in the Database
+        String updateStatusQuery = "UPDATE Orders SET OrderStatus = ? WHERE OrderID = ?";
+        PreparedStatement updateStatusStmt = connection.prepareStatement(updateStatusQuery);
+        updateStatusStmt.setString(1, newStatus);
+        updateStatusStmt.setString(2, selectedOrderId);
+
+        int rowsUpdated = updateStatusStmt.executeUpdate();
+        textArea.setText("Transaction 4: Complete Customer Purchase executed.\n");
+        if (rowsUpdated > 0) {
+            textArea.append("Order ID " + selectedOrderId + " has been updated to status: " + newStatus + ".\n");
+
+            // Step 4: Update Product Stock if Marked as Delivered
+            if ("Delivered".equalsIgnoreCase(newStatus)) {
+                String orderLineQuery = "SELECT ProductID, QuantityOrder FROM OrderLine WHERE OrderID = ?";
+                PreparedStatement orderLineStmt = connection.prepareStatement(orderLineQuery);
+                orderLineStmt.setString(1, selectedOrderId);
+
+                ResultSet orderLineResult = orderLineStmt.executeQuery();
+
+                while (orderLineResult.next()) {
+                    String productId = orderLineResult.getString("ProductID");
+                    int orderedQuantity = orderLineResult.getInt("QuantityOrder");
+
+                    // Update the product stock by subtracting the ordered quantity
+                    String updateStockQuery = "UPDATE Products SET QuantityInStock = QuantityInStock - ? WHERE ProductID = ?";
+                    PreparedStatement updateStockStmt = connection.prepareStatement(updateStockQuery);
+                    updateStockStmt.setInt(1, orderedQuantity);
+                    updateStockStmt.setString(2, productId);
+
+                    int stockUpdated = updateStockStmt.executeUpdate();
+                    if (stockUpdated > 0) {
+                        textArea.append("Product ID " + productId + " stock updated. Reduced by " + orderedQuantity + " units.\n");
+                    } else {
+                        textArea.append("Failed to update stock for Product ID: " + productId + ".\n");
+                    }
+                }
+            }
+        } else {
+            textArea.append("Failed to update status for Order ID: " + selectedOrderId + ".\n");
+        }
+    } catch (SQLException ex) {
+        textArea.append("Error updating order status or product stock: " + ex.getMessage() + "\n");
+    }  
+    
     }
     
-    public static void main (String args[]){
-
-        // test the SQL Statements
-        //sql statement 1
-        /*
-        Dbapp D = new Dbapp();
-        D.product_id = "P027";
-        D.product_quantity = 2;
-        D.Transaction4();
-        */
-        
-        
-        //sql statement 2
-        /*
-        Dbapp D = new Dbapp();
-        D.order_id = "O-002";
-        D.Transaction4();
-        */
-        
-        
-        //sql statement 3
-        /*
-        Dbapp D = new Dbapp();
-        D.orderl_id = "O-001";
-        D.orderl_price = 1;
-        D.orderl_productid = "P017";
-        D.orderl_quantity = 9;
-        D.orderl_subtotal = 2;
-        D.Transaction4();
-        */
-     
-    } 
-}
