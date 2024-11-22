@@ -126,25 +126,34 @@ public class DBappgui {
             textArea.setText("Error: " + ex.getMessage());
         }
     }
-    private static void executeTransaction1(Connection connection, JTextArea textArea) {
+     private static void executeTransaction1(Connection connection, JTextArea textArea) {
     try {
         // Step 1: Show Existing Supplier IDs and Identify Supplier
-        String supplierQuery = "SELECT SupplierID, SupplierName FROM Supplier";
-        PreparedStatement supplierStmt = connection.prepareStatement(supplierQuery);
-        ResultSet supplierResult = supplierStmt.executeQuery();
+String supplierQuery = "SELECT SupplierID, SupplierName FROM Supplier";
+PreparedStatement supplierStmt = connection.prepareStatement(supplierQuery);
+ResultSet supplierResult = supplierStmt.executeQuery();
 
-        JComboBox<String> supplierComboBox = new JComboBox<>();
-        while (supplierResult.next()) {
-            supplierComboBox.addItem(supplierResult.getString("SupplierID")+ ": " + supplierResult.getString("SupplierName"));
-        }
+JComboBox<String> supplierComboBox = new JComboBox<>();
+while (supplierResult.next()) {
+    String supplierId = supplierResult.getString("SupplierID");
+    String supplierName = supplierResult.getString("SupplierName");
+    supplierComboBox.addItem(supplierId + ": " + supplierName);
+}
 
-        int supplierSelection = JOptionPane.showConfirmDialog(null, supplierComboBox, "Select Supplier ID", JOptionPane.OK_CANCEL_OPTION);
-        if (supplierSelection != JOptionPane.OK_OPTION) {
-            textArea.setText("Transaction canceled.");
-            return;
-        }
-        String supplierId = (String) supplierComboBox.getSelectedItem();
+int supplierSelection = JOptionPane.showConfirmDialog(
+        null, 
+        supplierComboBox, 
+        "Select Supplier ID", 
+        JOptionPane.OK_CANCEL_OPTION
+);
 
+if (supplierSelection != JOptionPane.OK_OPTION) {
+    textArea.setText("Transaction canceled.");
+    return;
+}
+
+String selectedSupplier = (String) supplierComboBox.getSelectedItem();
+String supplierId = selectedSupplier.split(": ")[0];
         // Step 2: Show Existing Categories and Select a Category
         String categoryQuery = "SELECT CategoryID, CategoryName FROM Category";
         PreparedStatement categoryStmt = connection.prepareStatement(categoryQuery);
@@ -179,7 +188,7 @@ public class DBappgui {
         String productName = JOptionPane.showInputDialog(null, "Enter Product Name:");
         double price = Double.parseDouble(JOptionPane.showInputDialog(null, "Enter Product Price (will discount 20% of original price):"));
         int quantity = Integer.parseInt(JOptionPane.showInputDialog(null, "Enter Product Quantity In Stock:"));
-        price*=0.8;
+        
         // Insert the new product into the database
         String insertProductSQL = "INSERT INTO Products (ProductID, CategoryID, ProductName, Price, QuantityInStock, DateAdded) VALUES (?, ?, ?, ?, ?, CURRENT_DATE)";
         PreparedStatement insertProductStmt = connection.prepareStatement(insertProductSQL);
@@ -191,7 +200,7 @@ public class DBappgui {
         insertProductStmt.executeUpdate();
 
         textArea.append("Product added successfully with ID: " + productId2 + "\n");
-
+        price*=0.8;
         // Step 4: Create Purchase Order
         String latestPurchaseOrderQuery = "SELECT PurchaseOrderID FROM PurchaseOrder ORDER BY PurchaseOrderID DESC LIMIT 1";
         PreparedStatement latestPurchaseOrderStmt = connection.prepareStatement(latestPurchaseOrderQuery);
