@@ -283,9 +283,143 @@ String supplierId = selectedSupplier.split(": ")[0];
         textArea.setText("Transaction 4: Complete Customer Purchase executed.");
     }
 
-    private static void generateReport1(Connection connection, JTextArea textArea) throws SQLException {
-        // Add logic for Report 1
-        textArea.setText("Report 1: Supplier and Product Inventory generated.");
+   private static void generateReport1(Connection connection, JTextArea textArea) throws SQLException {
+        // Prepare text area for report output
+        textArea.setText("Report 1: Supplier and Product Inventory Report\n");
+        textArea.append("=============================================================\n");
+    
+        // Query to retrieve supplier and product details with the updated JOIN structure
+        String reportQuery = """
+            SELECT 
+                Supplier.SupplierName, 
+                Supplier.PhoneNo, 
+                Products.ProductID, 
+                Products.ProductName, 
+                Products.Price, 
+                Products.QuantityInStock, 
+                Category.CategoryName
+            FROM 
+                Supplier
+            JOIN 
+                PurchaseOrder ON Supplier.SupplierID = PurchaseOrder.SupplierID
+            JOIN 
+                PurchaseOrderLine ON PurchaseOrder.PurchaseOrderID = PurchaseOrderLine.PurchaseOrderID
+            JOIN 
+                Products ON PurchaseOrderLine.ProductID = Products.ProductID
+            JOIN 
+                Category ON Products.CategoryID = Category.CategoryID
+            ORDER BY 
+                Supplier.SupplierName, Category.CategoryName, Products.ProductName;
+        """;
+    
+        try (PreparedStatement reportStmt = connection.prepareStatement(reportQuery);
+             ResultSet reportResult = reportStmt.executeQuery()) {
+    
+            String currentSupplier = "";
+            String currentCategory = "";
+    
+            while (reportResult.next()) {
+                String supplierName = reportResult.getString("SupplierName");
+                String contactNumber = reportResult.getString("PhoneNo");
+                String categoryName = reportResult.getString("CategoryName");
+                String productId = reportResult.getString("ProductID");
+                String productName = reportResult.getString("ProductName");
+                double price = reportResult.getDouble("Price");
+                int stock = reportResult.getInt("QuantityInStock");
+    
+                if (!supplierName.equals(currentSupplier)) {
+                    currentSupplier = supplierName;
+                    textArea.append("\n\n\nSupplier: " + supplierName + "\n");
+                    textArea.append("Phone: " + contactNumber + "\n");
+                    textArea.append("-------------------------------------------------------------");
+                    currentCategory = "";
+                }
+    
+                if (!categoryName.equals(currentCategory)) {
+                    currentCategory = categoryName;
+                    textArea.append("\nCategory: " + categoryName + "\n");
+                    textArea.append("-------------------------------------------------------------\n");
+                }
+    
+                textArea.append(String.format(
+                    "  ProductID: %-10s | Product: %-20s | Price: $%-8.2f | Stock: %-5d\n",
+                    productId, productName, price, stock
+                ));
+            }
+    
+            // Ask the user if they want to filter products with stock below 50
+            int response = JOptionPane.showConfirmDialog(null, 
+                "Would you like to see products with stock below 50?", 
+                "Filter by Stock", 
+                JOptionPane.YES_NO_OPTION);
+    
+            if (response == JOptionPane.YES_OPTION) {
+                // Modify the query to filter by stock below 50 with correct SELECT and FROM
+                String stockQuery = """
+                    SELECT 
+                        Supplier.SupplierName, 
+                        Supplier.PhoneNo, 
+                        Products.ProductID, 
+                        Products.ProductName, 
+                        Products.Price, 
+                        Products.QuantityInStock, 
+                        Category.CategoryName
+                    FROM 
+                        Supplier
+                    JOIN 
+                        PurchaseOrder ON Supplier.SupplierID = PurchaseOrder.SupplierID
+                    JOIN 
+                        PurchaseOrderLine ON PurchaseOrder.PurchaseOrderID = PurchaseOrderLine.PurchaseOrderID
+                    JOIN 
+                        Products ON PurchaseOrderLine.ProductID = Products.ProductID
+                    JOIN 
+                        Category ON Products.CategoryID = Category.CategoryID
+                    WHERE 
+                        Products.QuantityInStock < 50
+                    ORDER BY 
+                        Supplier.SupplierName, Category.CategoryName, Products.ProductName;
+                """;
+    
+                try (PreparedStatement stockStmt = connection.prepareStatement(stockQuery);
+                     ResultSet stockResult = stockStmt.executeQuery()) {
+    
+                    textArea.append("\n\nProducts with Stock Below 50:\n");
+                    textArea.append("=============================================================\n");
+    
+                    while (stockResult.next()) {
+                        String supplierName = stockResult.getString("SupplierName");
+                        String contactNumber = stockResult.getString("PhoneNo");
+                        String categoryName = stockResult.getString("CategoryName");
+                        String productId = stockResult.getString("ProductID");
+                        String productName = stockResult.getString("ProductName");
+                        double price = stockResult.getDouble("Price");
+                        int stock = stockResult.getInt("QuantityInStock");
+    
+                        if (!supplierName.equals(currentSupplier)) {
+                            currentSupplier = supplierName;
+                            textArea.append("\n\n\nSupplier: " + supplierName + "\n");
+                            textArea.append("Phone: " + contactNumber + "\n");
+                            textArea.append("-------------------------------------------------------------");
+                            currentCategory = "";
+                        }
+    
+                        if (!categoryName.equals(currentCategory)) {
+                            currentCategory = categoryName;
+                            textArea.append("\nCategory: " + categoryName + "\n");
+                            textArea.append("-------------------------------------------------------------\n");
+                        }
+    
+                        textArea.append(String.format(
+                            "  ProductID: %-10s | Product: %-20s | Price: $%-8.2f | Stock: %-5d\n",
+                            productId, productName, price, stock
+                        ));
+                    }
+                }
+            }
+    
+        } catch (SQLException ex) {
+            textArea.append("\nError generating report: " + ex.getMessage());
+        }
     }
 
     private static void generateReport2(Connection connection, JTextArea textArea) throws SQLException {
