@@ -9,7 +9,7 @@ public class DBappgui {
 
     private static final String DB_URL = "jdbc:mysql://localhost:3306/CCINFOM_STORE";
     private static final String USER = "root";
-    private static final String PASSWORD = "input ur password here";
+    private static final String PASSWORD = "Newpassword123?";
 
     public static void main(String[] args) {
         JFrame frame = new JFrame("Database Viewer");
@@ -28,26 +28,36 @@ public class DBappgui {
         buttonPanel.setLayout(new GridLayout(4, 2));
 
         String[] buttons = {
-                "Transaction 1: Add Product to Inventory",
-                "Transaction 2: Place Customer Order",
-                "Transaction 3: Restock Inventory",
-                "Transaction 4: Complete Customer Purchase",
-                "Report 1: Supplier and Product Inventory",
-                "Report 2: Customer Order Summary",
-                "Report 3: Product Sales Performance",
-                "Report 4: Purchase Order Summary"
-        };
+            "Transaction 1: Add Product to Inventory",
+            "Transaction 2: Place Customer Order",
+            "Transaction 3: Restock Inventory",
+            "Transaction 4: Complete Customer Purchase",
+            "Report 1: Supplier and Product Inventory",
+            "Report 2: Customer Order Summary",
+            "Report 3: Product Sales Performance",
+            "Report 4: Purchase Order Summary",
+            "Product Record",
+            "Categories Record",
+            "Customer Record",
+            "Orders Record",
+            "Order Lines Record",
+            "Supplier Record",
+            "Purchase Order Record",
+            "Purchase Order Line Record",
+            "Payment Info Record"
+    };
 
-        for (String buttonName : buttons) {
-            JButton button = new JButton(buttonName);
-            button.addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    handleAction(buttonName, textArea);
-                }
-            });
-            buttonPanel.add(button);
-        }
+    for (String buttonName : buttons) {
+        JButton button = new JButton(buttonName);
+        button.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                handleAction(buttonName, textArea);
+            }
+        });
+        buttonPanel.add(button);
+    }
+
 
         panel.add(buttonPanel, BorderLayout.SOUTH);
         frame.add(panel);
@@ -81,6 +91,33 @@ public class DBappgui {
                     break;
                 case "Report 4: Purchase Order Summary":
                     generateReport4(connection, textArea);
+                    break;
+                case "Product Record":
+                    fetchProductRecords(connection, textArea);
+                    break;
+                case "Categories Record":
+                    fetchCategoryRecords(connection, textArea);
+                    break;
+                case "Customer Record":
+                    fetchCustomerRecords(connection, textArea);
+                    break;
+                case "Orders Record":
+                    fetchOrderRecords(connection, textArea);
+                    break;
+                case "Order Lines Record":
+                    fetchOrderLineRecords(connection, textArea);
+                    break;
+                case "Supplier Record":
+                    fetchSupplierRecords(connection, textArea);
+                    break;
+                case "Purchase Order Record":
+                    fetchPurchaseOrderRecords(connection, textArea);
+                    break;
+                case "Purchase Order Line Record":
+                    fetchPurchaseOrderLineRecords(connection, textArea);
+                    break;
+                case "Payment Info Record":
+                    fetchPaymentInfoRecords(connection, textArea);
                     break;
                 default:
                     textArea.setText("Invalid action.");
@@ -155,31 +192,50 @@ public class DBappgui {
                 return;
             }
     
-            // Check if product ID already exists
-            String productQuery = "SELECT * FROM Products WHERE ProductID = ?";
-            PreparedStatement productStmt = connection.prepareStatement(productQuery);
-            productStmt.setString(1, productId);
-            ResultSet productResult = productStmt.executeQuery();
-    
-            if (productResult.next()) {
-                textArea.append("ProductID already exists.\n");
-                return;
-            }
-    
-            String productName = JOptionPane.showInputDialog(null, "Enter Product Name:");
-            double price = Double.parseDouble(JOptionPane.showInputDialog(null, "Enter Product Price:"));
-            int quantity = Integer.parseInt(JOptionPane.showInputDialog(null, "Enter Product Quantity In Stock:"));
-    
-            String insertProductSQL = "INSERT INTO Products (ProductID, CategoryID, ProductName, Price, QuantityInStock, DateAdded) VALUES (?, ?, ?, ?, ?, CURRENT_DATE)";
-            PreparedStatement insertProductStmt = connection.prepareStatement(insertProductSQL);
-            insertProductStmt.setString(1, productId);
-            insertProductStmt.setString(2, categoryId);
-            insertProductStmt.setString(3, productName);
-            insertProductStmt.setDouble(4, price);
-            insertProductStmt.setInt(5, quantity);
-            insertProductStmt.executeUpdate();
-    
-            textArea.append("Product added with ID: " + productId + "\n");
+            // Step 3: Show the Latest Product ID and Add Product Details
+   String latestProductQuery = "SELECT ProductID FROM Products ORDER BY ProductID DESC LIMIT 1";
+PreparedStatement latestProductStmt = connection.prepareStatement(latestProductQuery);
+ResultSet latestProductResult = latestProductStmt.executeQuery();
+
+String latestProductId = "None"; // Default if no products exist
+if (latestProductResult.next()) {
+    latestProductId = latestProductResult.getString("ProductID");
+}
+textArea.append("Latest ProductID: " + latestProductId + "\n");
+
+String productId2 = JOptionPane.showInputDialog(null, "Latest ProductID: " + latestProductId + "\nEnter New ProductID (must be unique):");
+if (productId2 == null || productId2.trim().isEmpty()) {
+    textArea.setText("Transaction canceled.");
+    return;
+}
+
+// Check if ProductID already exists
+String productQuery = "SELECT * FROM Products WHERE ProductID = ?";
+PreparedStatement productStmt = connection.prepareStatement(productQuery);
+productStmt.setString(1, productId2);
+ResultSet productResult = productStmt.executeQuery();
+
+if (productResult.next()) {
+    textArea.append("ProductID already exists. Please try again.\n");
+    return;
+}
+
+String productName = JOptionPane.showInputDialog(null, "Enter Product Name:");
+double price = Double.parseDouble(JOptionPane.showInputDialog(null, "Enter Product Price:"));
+int quantity = Integer.parseInt(JOptionPane.showInputDialog(null, "Enter Product Quantity In Stock:"));
+
+// Insert the new product into the database
+String insertProductSQL = "INSERT INTO Products (ProductID, CategoryID, ProductName, Price, QuantityInStock, DateAdded) VALUES (?, ?, ?, ?, ?, CURRENT_DATE)";
+PreparedStatement insertProductStmt = connection.prepareStatement(insertProductSQL);
+insertProductStmt.setString(1, productId2);
+insertProductStmt.setString(2, categoryId);
+insertProductStmt.setString(3, productName);
+insertProductStmt.setDouble(4, price);
+insertProductStmt.setInt(5, quantity);
+insertProductStmt.executeUpdate();
+
+textArea.append("Product added successfully with ID: " + productId2 + "\n");
+
     
             // Step 4: Create Purchase Order
             String purchaseOrderQuery = "SELECT PurchaseOrderID FROM PurchaseOrder";
@@ -278,4 +334,227 @@ public class DBappgui {
         // Add logic for Report 4
         textArea.setText("Report 4: Purchase Order Summary generated.");
     }
+
+    private static void fetchProductRecords(Connection connection, JTextArea textArea) throws SQLException {
+        String selectSQL = "SELECT * FROM Products";
+        PreparedStatement selectStatement = connection.prepareStatement(selectSQL);
+        ResultSet resultSet = selectStatement.executeQuery();
+    
+        StringBuilder sb = new StringBuilder();
+        while (resultSet.next()) {
+            String productId = resultSet.getString("ProductID");
+            String categoryId = resultSet.getString("CategoryID");
+            String productName = resultSet.getString("ProductName");
+            java.math.BigDecimal price = resultSet.getBigDecimal("Price");
+            int quantity = resultSet.getInt("QuantityInStock");
+            java.sql.Date dateAdded = resultSet.getDate("DateAdded");
+    
+            sb.append("Product ID: ").append(productId).append("\n")
+              .append("Category ID: ").append(categoryId).append("\n")
+              .append("Product Name: ").append(productName).append("\n")
+              .append("Price: ").append(price).append("\n")
+              .append("Quantity: ").append(quantity).append("\n")
+              .append("Date Added: ").append(dateAdded).append("\n")
+              .append("---------------------------\n");
+        }
+        textArea.setText(sb.toString());
+    }
+    
+    private static void fetchCategoryRecords(Connection connection, JTextArea textArea) throws SQLException {
+        String selectSQL = "SELECT * FROM Category";
+        PreparedStatement selectStatement = connection.prepareStatement(selectSQL);
+        ResultSet resultSet = selectStatement.executeQuery();
+    
+        StringBuilder sb = new StringBuilder();
+        while (resultSet.next()) {
+            String categoryId = resultSet.getString("CategoryID");
+            String categoryName = resultSet.getString("CategoryName");
+    
+            sb.append("Category ID: ").append(categoryId).append("\n")
+              .append("Category Name: ").append(categoryName).append("\n")
+              .append("---------------------------\n");
+        }
+        textArea.setText(sb.toString());
+    }
+    
+    private static void fetchCustomerRecords(Connection connection, JTextArea textArea) throws SQLException {
+        String selectSQL = "SELECT * FROM Customers";
+        PreparedStatement selectStatement = connection.prepareStatement(selectSQL);
+        ResultSet resultSet = selectStatement.executeQuery();
+    
+        StringBuilder sb = new StringBuilder();
+        while (resultSet.next()) {
+            String customerId = resultSet.getString("CustomerID");
+            String firstName = resultSet.getString("FirstName");
+            String lastName = resultSet.getString("LastName");
+            java.sql.Date birthDate = resultSet.getDate("BirthDate");
+            String email = resultSet.getString("Email");
+            String phoneNo = resultSet.getString("PhoneNo");
+            java.sql.Date creationDate = resultSet.getDate("CreationDate");
+            String houseNo = resultSet.getString("HouseNo");
+            String street = resultSet.getString("Street");
+            String postalCode = resultSet.getString("PostalCode");
+            String city = resultSet.getString("City");
+    
+            sb.append("Customer ID: ").append(customerId).append("\n")
+              .append("First Name: ").append(firstName).append("\n")
+              .append("Last Name: ").append(lastName).append("\n")
+              .append("Birth Date: ").append(birthDate).append("\n")
+              .append("Email: ").append(email).append("\n")
+              .append("Phone No: ").append(phoneNo).append("\n")
+              .append("Creation Date: ").append(creationDate).append("\n")
+              .append("House No: ").append(houseNo).append("\n")
+              .append("Street: ").append(street).append("\n")
+              .append("Postal Code: ").append(postalCode).append("\n")
+              .append("City: ").append(city).append("\n")
+              .append("---------------------------\n");
+        }
+        textArea.setText(sb.toString());
+    }
+    
+    private static void fetchOrderRecords(Connection connection, JTextArea textArea) throws SQLException {
+        String selectSQL = "SELECT * FROM Orders";
+        PreparedStatement selectStatement = connection.prepareStatement(selectSQL);
+        ResultSet resultSet = selectStatement.executeQuery();
+    
+        StringBuilder sb = new StringBuilder();
+        while (resultSet.next()) {
+            String orderId = resultSet.getString("OrderID");
+            String customerId = resultSet.getString("CustomerID");
+            java.sql.Date orderDate = resultSet.getDate("OrderDate");
+            String orderStatus = resultSet.getString("OrderStatus");
+            java.math.BigDecimal totalCost = resultSet.getBigDecimal("TotalCost");
+    
+            sb.append("Order ID: ").append(orderId).append("\n")
+              .append("Customer ID: ").append(customerId).append("\n")
+              .append("Order Date: ").append(orderDate).append("\n")
+              .append("Order Status: ").append(orderStatus).append("\n")
+              .append("Total Cost: ").append(totalCost).append("\n")
+              .append("---------------------------\n");
+        }
+        textArea.setText(sb.toString());
+    }
+    
+    private static void fetchOrderLineRecords(Connection connection, JTextArea textArea) throws SQLException {
+        String selectSQL = "SELECT * FROM OrderLine";
+        PreparedStatement selectStatement = connection.prepareStatement(selectSQL);
+        ResultSet resultSet = selectStatement.executeQuery();
+    
+        StringBuilder sb = new StringBuilder();
+        while (resultSet.next()) {
+            String orderId = resultSet.getString("OrderID");
+            String productId = resultSet.getString("ProductID");
+            int quantityOrder = resultSet.getInt("QuantityOrder");
+            java.math.BigDecimal price = resultSet.getBigDecimal("Price");
+            java.math.BigDecimal subtotal = resultSet.getBigDecimal("Subtotal");
+    
+            sb.append("Order ID: ").append(orderId).append("\n")
+              .append("Product ID: ").append(productId).append("\n")
+              .append("Quantity Ordered: ").append(quantityOrder).append("\n")
+              .append("Price: ").append(price).append("\n")
+              .append("Subtotal: ").append(subtotal).append("\n")
+              .append("---------------------------\n");
+        }
+        textArea.setText(sb.toString());
+    }
+    
+    private static void fetchSupplierRecords(Connection connection, JTextArea textArea) throws SQLException {
+        String selectSQL = "SELECT * FROM Supplier";
+        PreparedStatement selectStatement = connection.prepareStatement(selectSQL);
+        ResultSet resultSet = selectStatement.executeQuery();
+    
+        StringBuilder sb = new StringBuilder();
+        while (resultSet.next()) {
+            String supplierId = resultSet.getString("SupplierID");
+            String supplierName = resultSet.getString("SupplierName");
+            String emailAddr = resultSet.getString("EmailAddr");
+            String phoneNo = resultSet.getString("PhoneNo");
+    
+            sb.append("Supplier ID: ").append(supplierId).append("\n")
+              .append("Supplier Name: ").append(supplierName).append("\n")
+              .append("Email Address: ").append(emailAddr).append("\n")
+              .append("Phone No: ").append(phoneNo).append("\n")
+              .append("---------------------------\n");
+        }
+        textArea.setText(sb.toString());
+    }
+    
+    private static void fetchPurchaseOrderRecords(Connection connection, JTextArea textArea) throws SQLException {
+        String selectSQL = "SELECT * FROM PurchaseOrder";
+        PreparedStatement selectStatement = connection.prepareStatement(selectSQL);
+        ResultSet resultSet = selectStatement.executeQuery();
+    
+        StringBuilder sb = new StringBuilder();
+        while (resultSet.next()) {
+            String purchaseOrderId = resultSet.getString("PurchaseOrderID");
+            String supplierId = resultSet.getString("SupplierID");
+            java.sql.Date orderDate = resultSet.getDate("OrderDate");
+            String orderStatus = resultSet.getString("OrderStatus");
+            java.math.BigDecimal totalCost = resultSet.getBigDecimal("TotalCost");
+    
+            sb.append("Purchase Order ID: ").append(purchaseOrderId).append("\n")
+              .append("Supplier ID: ").append(supplierId).append("\n")
+              .append("Order Date: ").append(orderDate).append("\n")
+              .append("Order Status: ").append(orderStatus).append("\n")
+              .append("Total Cost: ").append(totalCost).append("\n")
+              .append("---------------------------\n");
+        }
+        textArea.setText(sb.toString());
+    }
+    
+    private static void fetchPurchaseOrderLineRecords(Connection connection, JTextArea textArea) throws SQLException {
+        String selectSQL = "SELECT * FROM PurchaseOrderLine";
+        PreparedStatement selectStatement = connection.prepareStatement(selectSQL);
+        ResultSet resultSet = selectStatement.executeQuery();
+    
+        StringBuilder sb = new StringBuilder();
+        while (resultSet.next()) {
+            String purchaseOrderLineId = resultSet.getString("PurchaseOrderLineID");
+            String productId = resultSet.getString("ProductID");
+            String purchaseOrderId = resultSet.getString("PurchaseOrderID");
+            java.math.BigDecimal cost = resultSet.getBigDecimal("Cost");
+            int quantity = resultSet.getInt("Quantity");
+            java.math.BigDecimal subtotal = resultSet.getBigDecimal("Subtotal");
+    
+            sb.append("Purchase Order Line ID: ").append(purchaseOrderLineId).append("\n")
+              .append("Product ID: ").append(productId).append("\n")
+              .append("Purchase Order ID: ").append(purchaseOrderId).append("\n")
+              .append("Cost: ").append(cost).append("\n")
+              .append("Quantity: ").append(quantity).append("\n")
+              .append("Subtotal: ").append(subtotal).append("\n")
+              .append("---------------------------\n");
+        }
+        textArea.setText(sb.toString());
+    }
+    
+    private static void fetchPaymentInfoRecords(Connection connection, JTextArea textArea) throws SQLException {
+        String selectSQL = "SELECT * FROM Paymentinfo";
+        PreparedStatement selectStatement = connection.prepareStatement(selectSQL);
+        ResultSet resultSet = selectStatement.executeQuery();
+    
+        StringBuilder sb = new StringBuilder();
+        while (resultSet.next()) {
+            String paymentId = resultSet.getString("PaymentID");
+            String orderId = resultSet.getString("OrderID");
+            String cardNo = resultSet.getString("CardNo");
+            String cardCVC = resultSet.getString("CardCVC");
+            int cardExpirationMonth = resultSet.getInt("CardExpirationMonth");
+            int cardExpirationYear = resultSet.getInt("CardExpirationYear");
+            String paymentType = resultSet.getString("PaymentType");
+            java.sql.Date dateOfPayment = resultSet.getDate("DateOfPayment");
+    
+            sb.append("Payment ID: ").append(paymentId).append("\n")
+              .append("Order ID: ").append(orderId).append("\n")
+              .append("Card No: ").append(cardNo).append("\n")
+              .append("Card CVC: ").append(cardCVC).append("\n")
+              .append("Card Expiration Month: ").append(cardExpirationMonth).append("\n")
+              .append("Card Expiration Year: ").append(cardExpirationYear).append("\n")
+              .append("Payment Type: ").append(paymentType).append("\n")
+              .append("Date Of Payment: ").append(dateOfPayment).append("\n")
+              .append("---------------------------\n");
+        }
+        textArea.setText(sb.toString());
+    }
+    
+    
 }
