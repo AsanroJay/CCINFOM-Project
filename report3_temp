@@ -1,0 +1,48 @@
+    private static void generateReport3(Connection connection, JTextArea textArea) throws SQLException {
+        String reportQuery = 
+            "SELECT c.CategoryName, p.ProductName, " +
+            "SUM(ol.QuantityOrder) AS TotalQuantitySold, " +
+            "SUM(ol.QuantityOrder * p.Price) AS RevenueGenerated " +
+            "FROM OrderLine ol " +
+            "JOIN Products p ON ol.ProductID = p.ProductID " +
+            "JOIN Category c ON p.CategoryID = c.CategoryID " +
+            "JOIN Orders o ON ol.OrderID = o.OrderID " +
+            "GROUP BY c.CategoryName, p.ProductName " +
+            "ORDER BY c.CategoryName, RevenueGenerated DESC";
+    
+        try (Statement stmt = connection.createStatement();
+             ResultSet rs = stmt.executeQuery(reportQuery)) {
+            
+            // Use a StringBuilder for constructing the report
+            StringBuilder report = new StringBuilder("Report 3: Product Sales Performance\n");
+            
+            // Header
+            report.append(String.format(
+                "%-20s %-40s %-20s %-20s\n", 
+                "Category", "Product Name", "Total Quantity Sold", "Revenue Generated"
+            ));
+            report.append("---------------------------------------------------------------------------------------------\n");
+    
+            // Data rows
+            while (rs.next()) {
+                String categoryName = rs.getString("CategoryName");
+                String productName = rs.getString("ProductName");
+                int totalQuantitySold = rs.getInt("TotalQuantitySold");
+                double revenueGenerated = rs.getDouble("RevenueGenerated");
+    
+                report.append(String.format(
+                    "%-20s %-40s %-20d %-20.2f\n",
+                    categoryName, productName, totalQuantitySold, revenueGenerated
+                ));
+            }
+    
+            // Set monospaced font for consistent alignment
+            textArea.setFont(new Font("Courier New", Font.PLAIN, 12));
+            textArea.setText(report.toString());
+        } catch (SQLException e) {
+            textArea.setText("Error generating Report 3: " + e.getMessage());
+            throw e;
+        }
+    }
+    
+    
