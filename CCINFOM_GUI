@@ -287,12 +287,12 @@ String supplierId = selectedSupplier.split(": ")[0];
         textArea.setText("Transaction 4: Complete Customer Purchase executed.");
     }
 
-    private static void generateReport1(Connection connection, JTextArea textArea) throws SQLException {
+        private static void generateReport1(Connection connection, JTextArea textArea) throws SQLException {
         // Prepare text area for report output
         textArea.setText("Report 1: Supplier and Product Inventory Report\n");
         textArea.append("=============================================================\n");
     
-        // Query to retrieve supplier and product details with the updated JOIN structure
+        // Base query to retrieve supplier and product details
         String reportQuery = """
             SELECT 
                 Supplier.SupplierName, 
@@ -351,43 +351,82 @@ String supplierId = selectedSupplier.split(": ")[0];
                 ));
             }
     
-            // Ask the user if they want to filter products with stock below 50
-            int response = JOptionPane.showConfirmDialog(null, 
-                "Would you like to see products with stock below 50?", 
-                "Filter by Stock", 
-                JOptionPane.YES_NO_OPTION);
+            // Create the drop-down menu (JComboBox) for stock filter options
+            String[] stockOptions = {"All Products", "Stock Below 50", "Stock Above 50"};
+            JComboBox<String> stockFilterComboBox = new JComboBox<>(stockOptions);
     
-            if (response == JOptionPane.YES_OPTION) {
-                // Modify the query to filter by stock below 50 with correct SELECT and FROM
-                String stockQuery = """
-                    SELECT 
-                        Supplier.SupplierName, 
-                        Supplier.PhoneNo, 
-                        Products.ProductID, 
-                        Products.ProductName, 
-                        Products.Price, 
-                        Products.QuantityInStock, 
-                        Category.CategoryName
-                    FROM 
-                        Supplier
-                    JOIN 
-                        PurchaseOrder ON Supplier.SupplierID = PurchaseOrder.SupplierID
-                    JOIN 
-                        PurchaseOrderLine ON PurchaseOrder.PurchaseOrderID = PurchaseOrderLine.PurchaseOrderID
-                    JOIN 
-                        Products ON PurchaseOrderLine.ProductID = Products.ProductID
-                    JOIN 
-                        Category ON Products.CategoryID = Category.CategoryID
-                    WHERE 
-                        Products.QuantityInStock < 50
-                    ORDER BY 
-                        Supplier.SupplierName, Category.CategoryName, Products.ProductName;
-                """;
+            // Display the drop-down menu in a dialog
+            int option = JOptionPane.showConfirmDialog(null, stockFilterComboBox, 
+                "Select Stock Filter", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
     
+            if (option == JOptionPane.OK_OPTION) {
+                String selectedFilter = (String) stockFilterComboBox.getSelectedItem();
+    
+                // Modify the query based on the selected filter
+                String stockQuery = switch (selectedFilter) {
+                    case "Stock Below 50" -> """
+                        SELECT 
+                            Supplier.SupplierName, 
+                            Supplier.PhoneNo, 
+                            Products.ProductID, 
+                            Products.ProductName, 
+                            Products.Price, 
+                            Products.QuantityInStock, 
+                            Category.CategoryName
+                        FROM 
+                            Supplier
+                        JOIN 
+                            PurchaseOrder ON Supplier.SupplierID = PurchaseOrder.SupplierID
+                        JOIN 
+                            PurchaseOrderLine ON PurchaseOrder.PurchaseOrderID = PurchaseOrderLine.PurchaseOrderID
+                        JOIN 
+                            Products ON PurchaseOrderLine.ProductID = Products.ProductID
+                        JOIN 
+                            Category ON Products.CategoryID = Category.CategoryID
+                        WHERE 
+                            Products.QuantityInStock < 50
+                        ORDER BY 
+                            Supplier.SupplierName, Category.CategoryName, Products.ProductName;
+                    """;
+                    case "Stock Above 50" -> """
+                        SELECT 
+                            Supplier.SupplierName, 
+                            Supplier.PhoneNo, 
+                            Products.ProductID, 
+                            Products.ProductName, 
+                            Products.Price, 
+                            Products.QuantityInStock, 
+                            Category.CategoryName
+                        FROM 
+                            Supplier
+                        JOIN 
+                            PurchaseOrder ON Supplier.SupplierID = PurchaseOrder.SupplierID
+                        JOIN 
+                            PurchaseOrderLine ON PurchaseOrder.PurchaseOrderID = PurchaseOrderLine.PurchaseOrderID
+                        JOIN 
+                            Products ON PurchaseOrderLine.ProductID = Products.ProductID
+                        JOIN 
+                            Category ON Products.CategoryID = Category.CategoryID
+                        WHERE 
+                            Products.QuantityInStock >= 50
+                        ORDER BY 
+                            Supplier.SupplierName, Category.CategoryName, Products.ProductName;
+                    """;
+                    default -> reportQuery; // Default: no filter (all products)
+                };
+    
+                // Execute the appropriate stock query based on the user's selection
                 try (PreparedStatement stockStmt = connection.prepareStatement(stockQuery);
                      ResultSet stockResult = stockStmt.executeQuery()) {
-    
-                    textArea.append("\n\nProducts with Stock Below 50:\n");
+
+                    textArea.append("\n\n\n=============================================================\n");
+                    if ("Stock Below 50".equals(selectedFilter)) {
+                        textArea.append("Products with Stock Below 50:\n");
+                    } else if ("Stock Above 50".equals(selectedFilter)) {
+                        textArea.append("Products with Stock Above 50:\n");
+                    } else {
+                        textArea.append("All Products:\n");
+                    }
                     textArea.append("=============================================================\n");
     
                     while (stockResult.next()) {
@@ -425,6 +464,7 @@ String supplierId = selectedSupplier.split(": ")[0];
             textArea.append("\nError generating report: " + ex.getMessage());
         }
     }
+    
     
     
     
