@@ -127,180 +127,133 @@ public class DBappgui {
         }
     }
     private static void executeTransaction1(Connection connection, JTextArea textArea) {
-        try {
-            // Step 1: Show Existing Supplier IDs and Identify Supplier
-            String supplierQuery = "SELECT SupplierID FROM Supplier";
-            PreparedStatement supplierStmt = connection.prepareStatement(supplierQuery);
-            ResultSet supplierResult = supplierStmt.executeQuery();
-    
-            StringBuilder supplierList = new StringBuilder("Available Suppliers:\n");
-            while (supplierResult.next()) {
-                supplierList.append(supplierResult.getString("SupplierID")).append("\n");
-            }
-    
-            String supplierId = JOptionPane.showInputDialog(null, supplierList + "Enter Supplier ID or to exit type a non suplier id: ");
-            if (supplierId == null || supplierId.trim().isEmpty()) {
-                textArea.setText("Transaction canceled.");
-                return;
-            }
-    
-            // Check if the supplier exists
-            supplierQuery = "SELECT * FROM Supplier WHERE SupplierID = ?";
-            supplierStmt = connection.prepareStatement(supplierQuery);
-            supplierStmt.setString(1, supplierId);
-            supplierResult = supplierStmt.executeQuery();
-    
-            if (!supplierResult.next()) {
-                textArea.append("EXITING.\n");
-                return;
-            }
-    
-            // Step 2: Show Existing Categories and Select a Category
-            
-            String categoryQuery = "SELECT CategoryID, CategoryName FROM Category";
-            PreparedStatement categoryStmt = connection.prepareStatement(categoryQuery);
-            ResultSet categoryResult = categoryStmt.executeQuery();
-            
-            StringBuilder categoryList = new StringBuilder("Available Categories:\n");
-            while (categoryResult.next()) {
-                categoryList.append(categoryResult.getString("CategoryID"))
-                            .append(": ")
-                            .append(categoryResult.getString("CategoryName"))
-                            .append("\n");
-            }
-            int t=0;
-            String categoryId="s";
-            while(t==0){
-                while (categoryResult.next()) {
-                    categoryList.append(categoryResult.getString("CategoryID"))
-                                .append(": ")
-                                .append(categoryResult.getString("CategoryName"))
-                                .append("\n");
-                }
-            categoryId = JOptionPane.showInputDialog(null, categoryList + "Enter CategoryID:");
-            // Check if the category exists
-            categoryQuery = "SELECT * FROM Category WHERE CategoryID = ?";
-            categoryStmt = connection.prepareStatement(categoryQuery);
-            categoryStmt.setString(1, categoryId);
-            categoryResult = categoryStmt.executeQuery();
-    
-            if (!categoryResult.next()) {
-                textArea.append("Invalid CategoryID.\n");
-            }else{
-                t=1;
-            }}
-    
-            // Step 3: Show the Latest Product ID and Add Product Details
-            String latestProductQuery = "SELECT ProductID FROM Products";
-            PreparedStatement latestProductStmt = connection.prepareStatement(latestProductQuery);
-            ResultSet latestProductResult = latestProductStmt.executeQuery();
-            
-            StringBuilder latestProductId = new StringBuilder("USED ProductIDs:\n");
-            while (latestProductResult.next()) {
-                latestProductId.append(latestProductResult.getString("ProductID")).append("\n");
-            }
-            
-            textArea.append(latestProductId.toString());
-            String productId2 ="g";
-            int p=0;
-            while(p==0){
-            productId2 = JOptionPane.showInputDialog(null, "Latest ProductID: " + latestProductId + "\nEnter New ProductID (must be unique):");
-    
-            // Check if ProductID already exists
-            String productQuery = "SELECT * FROM Products WHERE ProductID = ?";
-            PreparedStatement productStmt = connection.prepareStatement(productQuery);
-            productStmt.setString(1, productId2);
-            ResultSet productResult = productStmt.executeQuery();
-    
-            if (productResult.next()) {
-                textArea.append("ProductID already exists. Please try again.\n");
-            } else{
-                p=1;
+    try {
+        // Step 1: Show Existing Supplier IDs and Identify Supplier
+        String supplierQuery = "SELECT SupplierID, SupplierName FROM Supplier";
+        PreparedStatement supplierStmt = connection.prepareStatement(supplierQuery);
+        ResultSet supplierResult = supplierStmt.executeQuery();
+
+        JComboBox<String> supplierComboBox = new JComboBox<>();
+        while (supplierResult.next()) {
+            supplierComboBox.addItem(supplierResult.getString("SupplierID")+ ": " + supplierResult.getString("SupplierName"));
+        }
+
+        int supplierSelection = JOptionPane.showConfirmDialog(null, supplierComboBox, "Select Supplier ID", JOptionPane.OK_CANCEL_OPTION);
+        if (supplierSelection != JOptionPane.OK_OPTION) {
+            textArea.setText("Transaction canceled.");
+            return;
+        }
+        String supplierId = (String) supplierComboBox.getSelectedItem();
+
+        // Step 2: Show Existing Categories and Select a Category
+        String categoryQuery = "SELECT CategoryID, CategoryName FROM Category";
+        PreparedStatement categoryStmt = connection.prepareStatement(categoryQuery);
+        ResultSet categoryResult = categoryStmt.executeQuery();
+
+        JComboBox<String> categoryComboBox = new JComboBox<>();
+        while (categoryResult.next()) {
+            String categoryItem = categoryResult.getString("CategoryID") + ": " + categoryResult.getString("CategoryName");
+            categoryComboBox.addItem(categoryItem);
+        }
+
+        int categorySelection = JOptionPane.showConfirmDialog(null, categoryComboBox, "Select Category ID", JOptionPane.OK_CANCEL_OPTION);
+        if (categorySelection != JOptionPane.OK_OPTION) {
+            textArea.setText("Transaction canceled.");
+            return;
+        }
+        String selectedCategory = (String) categoryComboBox.getSelectedItem();
+        String categoryId = selectedCategory.split(":")[0].trim();
+
+        // Step 3: Show the Latest Product ID and Add Product Details
+        String latestProductQuery = "SELECT ProductID FROM Products ORDER BY ProductID DESC LIMIT 1";
+        PreparedStatement latestProductStmt = connection.prepareStatement(latestProductQuery);
+        ResultSet latestProductResult = latestProductStmt.executeQuery();
+
+        String productId2 = "P001"; // Default if no products exist
+        if (latestProductResult.next()) {
+            String lastProductId = latestProductResult.getString("ProductID");
+            int newProductIdNum = Integer.parseInt(lastProductId.substring(1)) + 1; // Adjusted to start substring from index 1
+            productId2 = "P" + String.format("%03d", newProductIdNum); // Generate new ProductID with leading zeros
+        }
+
+        String productName = JOptionPane.showInputDialog(null, "Enter Product Name:");
+        double price = Double.parseDouble(JOptionPane.showInputDialog(null, "Enter Product Price (will discount 20% of original price):"));
+        int quantity = Integer.parseInt(JOptionPane.showInputDialog(null, "Enter Product Quantity In Stock:"));
+        price*=0.8;
+        // Insert the new product into the database
+        String insertProductSQL = "INSERT INTO Products (ProductID, CategoryID, ProductName, Price, QuantityInStock, DateAdded) VALUES (?, ?, ?, ?, ?, CURRENT_DATE)";
+        PreparedStatement insertProductStmt = connection.prepareStatement(insertProductSQL);
+        insertProductStmt.setString(1, productId2);
+        insertProductStmt.setString(2, categoryId);
+        insertProductStmt.setString(3, productName);
+        insertProductStmt.setDouble(4, price);
+        insertProductStmt.setInt(5, quantity);
+        insertProductStmt.executeUpdate();
+
+        textArea.append("Product added successfully with ID: " + productId2 + "\n");
+
+        // Step 4: Create Purchase Order
+        String latestPurchaseOrderQuery = "SELECT PurchaseOrderID FROM PurchaseOrder ORDER BY PurchaseOrderID DESC LIMIT 1";
+        PreparedStatement latestPurchaseOrderStmt = connection.prepareStatement(latestPurchaseOrderQuery);
+        ResultSet latestPurchaseOrderResult = latestPurchaseOrderStmt.executeQuery();
+
+        String purchaseOrderId = "PO-001"; // Default if no purchase orders exist
+        if (latestPurchaseOrderResult.next()) {
+            String lastPurchaseOrderId = latestPurchaseOrderResult.getString("PurchaseOrderID");
+            int newPurchaseOrderIdNum = Integer.parseInt(lastPurchaseOrderId.substring(3)) + 1; // Adjusted to start substring from index 2
+            purchaseOrderId = "PO-" + String.format("%03d", newPurchaseOrderIdNum); // Generate new PurchaseOrderID with leading zeros
+        }
+
+        String orderStatus="s";
+        int y = 0;
+        while (y == 0) {
+            orderStatus = JOptionPane.showInputDialog(null, "Enter Order Status (Pending or Completed):");
+            if ("Pending".equalsIgnoreCase(orderStatus) || "Completed".equalsIgnoreCase(orderStatus)) {
+                y = 1;
             }
         }
-            String productName = JOptionPane.showInputDialog(null, "Enter Product Name:");
-            double price = Double.parseDouble(JOptionPane.showInputDialog(null, "Enter Product Price:"));
-            int quantity = Integer.parseInt(JOptionPane.showInputDialog(null, "Enter Product Quantity In Stock:"));
-    
-            // Insert the new product into the database
-            String insertProductSQL = "INSERT INTO Products (ProductID, CategoryID, ProductName, Price, QuantityInStock, DateAdded) VALUES (?, ?, ?, ?, ?, CURRENT_DATE)";
-            PreparedStatement insertProductStmt = connection.prepareStatement(insertProductSQL);
-            insertProductStmt.setString(1, productId2);
-            insertProductStmt.setString(2, categoryId);
-            insertProductStmt.setString(3, productName);
-            insertProductStmt.setDouble(4, price);
-            insertProductStmt.setInt(5, quantity);
-            insertProductStmt.executeUpdate();
-    
-            textArea.append("Product added successfully with ID: " + productId2 + "\n");
-    
-            // Step 4: Create Purchase Order
-            String purchaseOrderId = JOptionPane.showInputDialog(null, "Enter new PurchaseOrderID (must be unique):");
-            if (purchaseOrderId == null || purchaseOrderId.trim().isEmpty()) {
-                textArea.setText("Transaction canceled.");
-                return;
-            }
-    
-            // Check if the Purchase Order ID is unique
-            String poQuery = "SELECT * FROM PurchaseOrder WHERE PurchaseOrderID = ?";
-            PreparedStatement poStmt = connection.prepareStatement(poQuery);
-            poStmt.setString(1, purchaseOrderId);
-            ResultSet poResult = poStmt.executeQuery();
-    
-            if (poResult.next()) {
-                textArea.append("PurchaseOrderID already exists.\n");
-                return;
-            }
-    
-            String orderStatus="D";
-            int y=0;
-            while (y==0) {
-                orderStatus = JOptionPane.showInputDialog(null, "Enter Order Status (Pending or Completed):");
-                if ("Pending".equalsIgnoreCase(orderStatus) || "Completed".equalsIgnoreCase(orderStatus)) {
-                    y=1;
-                }
-            }
-            double totalCost = price * quantity;
-    
-            String insertPurchaseOrderSQL = "INSERT INTO PurchaseOrder (PurchaseOrderID, SupplierID, OrderDate, OrderStatus, TotalCost) VALUES (?, ?, CURRENT_DATE, ?, ?)";
-            PreparedStatement insertPurchaseOrderStmt = connection.prepareStatement(insertPurchaseOrderSQL);
-            insertPurchaseOrderStmt.setString(1, purchaseOrderId);
-            insertPurchaseOrderStmt.setString(2, supplierId);
-            insertPurchaseOrderStmt.setString(3, orderStatus);
-            insertPurchaseOrderStmt.setDouble(4, totalCost);
-            insertPurchaseOrderStmt.executeUpdate();
-    
-            textArea.append("Purchase Order created with ID: " + purchaseOrderId + "\n");
-    
-            // Enter Purchase Order Line ID
-            String purchaseOrderLineId ="d";
-            int x=0;
-            while (x==0) {
-                purchaseOrderLineId = JOptionPane.showInputDialog(null, "Enter PURCHASE ORDER Line ID:");
-                if (purchaseOrderLineId != null && purchaseOrderLineId.length() <= 8) {
-                    x=1;
-                }
-            }
-    
-            // Add Product to Purchase Order Line
-            String insertOrderLineSQL = "INSERT INTO PurchaseOrderLine (PurchaseOrderLineID, PurchaseOrderID, ProductID, Cost, Quantity, Subtotal) VALUES (?, ?, ?, ?, ?, ?)";
-            PreparedStatement insertOrderLineStmt = connection.prepareStatement(insertOrderLineSQL);
-            insertOrderLineStmt.setString(1, purchaseOrderLineId);
-            insertOrderLineStmt.setString(2, purchaseOrderId);
-            insertOrderLineStmt.setString(3, productId2);
-            insertOrderLineStmt.setDouble(4, price);
-            insertOrderLineStmt.setInt(5, quantity);
-            insertOrderLineStmt.setDouble(6, totalCost);
-            insertOrderLineStmt.executeUpdate();
-    
-            textArea.append("Purchase Order Line added with ID: " + purchaseOrderLineId + "\n");
-    
-        } catch (SQLException ex) {
-            textArea.append("Error in Transaction 1: " + ex.getMessage() + "\n");
-        } catch (NumberFormatException ex) {
-            textArea.append("Error: Invalid input format.\n");
+        double totalCost = price * quantity;
+
+        String insertPurchaseOrderSQL = "INSERT INTO PurchaseOrder (PurchaseOrderID, SupplierID, OrderDate, OrderStatus, TotalCost) VALUES (?, ?, CURRENT_DATE, ?, ?)";
+        PreparedStatement insertPurchaseOrderStmt = connection.prepareStatement(insertPurchaseOrderSQL);
+        insertPurchaseOrderStmt.setString(1, purchaseOrderId);
+        insertPurchaseOrderStmt.setString(2, supplierId);
+        insertPurchaseOrderStmt.setString(3, orderStatus);
+        insertPurchaseOrderStmt.setDouble(4, totalCost);
+        insertPurchaseOrderStmt.executeUpdate();
+
+        textArea.append("Purchase Order created with ID: " + purchaseOrderId + "\n");
+
+        // Add Product to Purchase Order Line
+        String latestPurchaseOrderLineQuery = "SELECT PurchaseOrderLineID FROM PurchaseOrderLine ORDER BY PurchaseOrderLineID DESC LIMIT 1";
+        PreparedStatement latestPurchaseOrderLineStmt = connection.prepareStatement(latestPurchaseOrderLineQuery);
+        ResultSet latestPurchaseOrderLineResult = latestPurchaseOrderLineStmt.executeQuery();
+
+        String purchaseOrderLineId = "POL-001"; // Default if no purchase order lines exist
+        if (latestPurchaseOrderLineResult.next()) {
+            String lastPurchaseOrderLineId = latestPurchaseOrderLineResult.getString("PurchaseOrderLineID");
+            int newPurchaseOrderLineIdNum = Integer.parseInt(lastPurchaseOrderLineId.substring(5)) + 1; // Adjusted to start substring from index 3
+            purchaseOrderLineId = "POL-" + String.format("%03d", newPurchaseOrderLineIdNum); // Generate new PurchaseOrderLineID with leading zeros
         }
+
+        String insertOrderLineSQL = "INSERT INTO PurchaseOrderLine (PurchaseOrderLineID, PurchaseOrderID, ProductID, Cost, Quantity, Subtotal) VALUES (?, ?, ?, ?, ?, ?)";
+        PreparedStatement insertOrderLineStmt = connection.prepareStatement(insertOrderLineSQL);
+        insertOrderLineStmt.setString(1, purchaseOrderLineId);
+        insertOrderLineStmt.setString(2, purchaseOrderId);
+        insertOrderLineStmt.setString(3, productId2);
+        insertOrderLineStmt.setDouble(4, price);
+        insertOrderLineStmt.setInt(5, quantity);
+        insertOrderLineStmt.setDouble(6, totalCost);
+        insertOrderLineStmt.executeUpdate();
+
+        textArea.append("Purchase Order Line added with ID: " + purchaseOrderLineId + "\n");
+
+    } catch (SQLException ex) {
+        textArea.append("Error in Transaction 1: " + ex.getMessage() + "\n");
+    } catch (NumberFormatException ex) {
+        textArea.append("Error: Invalid input format.\n");
     }
+}
     
     
 
