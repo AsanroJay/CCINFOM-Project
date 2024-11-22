@@ -4,8 +4,6 @@
         textArea.setText("Report 4: Purchase Order Summary generated.");
         textArea.setText("Report 4: Purchase Order and Restocking Summary\n");
     textArea.append("=============================================================\n");
-    textArea.append("Purpose: Tracks restocking activities and costs associated with suppliers.\n");
-    textArea.append("=============================================================\n");
 
     // Base query to retrieve purchase orders, suppliers, and products
     String reportQuery = """
