@@ -201,7 +201,7 @@ String supplierId = selectedSupplier.split(": ")[0];
         insertProductStmt.executeUpdate();
 
         textArea.append("Product added successfully with ID: " + productId2 + "\n");
-        price*=0.8;
+        
         // Step 4: Create Purchase Order
         String latestPurchaseOrderQuery = "SELECT PurchaseOrderID FROM PurchaseOrder ORDER BY PurchaseOrderID DESC LIMIT 1";
         PreparedStatement latestPurchaseOrderStmt = connection.prepareStatement(latestPurchaseOrderQuery);
@@ -214,16 +214,28 @@ String supplierId = selectedSupplier.split(": ")[0];
             purchaseOrderId = "PO-" + String.format("%03d", newPurchaseOrderIdNum); // Generate new PurchaseOrderID with leading zeros
         }
 
-        String orderStatus="s";
-        int y = 0;
-        while (y == 0) {
-            orderStatus = JOptionPane.showInputDialog(null, "Enter Order Status (Pending or Completed):");
-            if ("Pending".equalsIgnoreCase(orderStatus) || "Completed".equalsIgnoreCase(orderStatus)) {
-                y = 1;
-            }
+         // Prompt for Order Status
+         String[] statuses = { "Pending", "Completed", "Cancelled" };
+         JComboBox<String> statusComboBox1 = new JComboBox<>(statuses);
+         JOptionPane.showConfirmDialog(null, statusComboBox1, "Select Order Status", JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE);
+         String orderStatus = (String) statusComboBox1.getSelectedItem();
+      
+        
+         if (orderStatus.equals("Pending") || orderStatus.equals("Cancelled")) {
+            String updateTatestSQL = 
+                "UPDATE Products " +
+                "SET QuantityInStock = 0 " +
+                "WHERE ProductID = ?";
+        
+            PreparedStatement updateTatestStmt = connection.prepareStatement(updateTatestSQL);
+            updateTatestStmt.setString(1, productId2);       // ProductID in WHERE clause
+            updateTatestStmt.executeUpdate();
         }
+        
+        
+        
+        price*=0.8;
         double totalCost = price * quantity;
-
         String insertPurchaseOrderSQL = "INSERT INTO PurchaseOrder (PurchaseOrderID, SupplierID, OrderDate, OrderStatus, TotalCost) VALUES (?, ?, CURRENT_DATE, ?, ?)";
         PreparedStatement insertPurchaseOrderStmt = connection.prepareStatement(insertPurchaseOrderSQL);
         insertPurchaseOrderStmt.setString(1, purchaseOrderId);
