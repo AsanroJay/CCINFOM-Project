@@ -43,20 +43,20 @@ public class DBfinalappgui {
             "Supplier Record",
             "Purchase Order Record",
             "Purchase Order Line Record",
-            "Payment Info Record"
-    };
+            "Payment Info Record",
+            "Change Product Order Status"
+        };
 
-    for (String buttonName : buttons) {
-        JButton button = new JButton(buttonName);
-        button.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                handleAction(buttonName, textArea);
-            }
-        });
-        buttonPanel.add(button);
-    }
-
+        for (String buttonName : buttons) {
+            JButton button = new JButton(buttonName);
+            button.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    handleAction(buttonName, textArea);
+                }
+            });
+            buttonPanel.add(button);
+        }
 
         panel.add(buttonPanel, BorderLayout.SOUTH);
         frame.add(panel);
@@ -117,6 +117,9 @@ public class DBfinalappgui {
                     break;
                 case "Payment Info Record":
                     fetchPaymentInfoRecords(connection, textArea);
+                    break;
+                case "Change Product Order Status":
+                    ChangePoStatus(connection, textArea);
                     break;
                 default:
                     textArea.setText("Invalid action.");
@@ -1431,6 +1434,9 @@ private static String getNextPurchaseOrderID3(Connection connection) throws SQLE
               .append("---------------------------\n");
         }
         textArea.setText(sb.toString());
+    }
+     private static void ChangePoStatus(Connection connection, JTextArea textArea) {
+        //add
     }
     
     
