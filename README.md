@@ -1,3 +1,3 @@
 # CCINFOM-Project
 
-hi
+Ecommerce DBApp and Database with GUI implemented from Java Swing
