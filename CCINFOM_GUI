@@ -1435,9 +1435,111 @@ private static String getNextPurchaseOrderID3(Connection connection) throws SQLE
         }
         textArea.setText(sb.toString());
     }
-     private static void ChangePoStatus(Connection connection, JTextArea textArea) {
-        //add
+    private static void ChangePoStatus(Connection connection, JTextArea textArea) {
+        try {
+            // Fetch and display all pending POs
+            StringBuilder pendingPOsList = new StringBuilder();
+            String fetchPendingPOsQuery = "SELECT * FROM PurchaseOrder WHERE OrderStatus = 'Pending'";
+            try (PreparedStatement fetchPendingPOsStmt = connection.prepareStatement(fetchPendingPOsQuery);
+                 ResultSet pendingPOsRS = fetchPendingPOsStmt.executeQuery()) {
+    
+                pendingPOsList.append("Pending Purchase Orders:\n");
+                pendingPOsList.append("---------------------------\n");
+                DefaultComboBoxModel<String> poModel = new DefaultComboBoxModel<>();
+    
+                while (pendingPOsRS.next()) {
+                    String purchaseOrderId = pendingPOsRS.getString("PurchaseOrderID");
+                    String supplierId = pendingPOsRS.getString("SupplierID");
+                    java.sql.Date orderDate = pendingPOsRS.getDate("OrderDate");
+                    String orderStatus = pendingPOsRS.getString("OrderStatus");
+                    java.math.BigDecimal totalCost = pendingPOsRS.getBigDecimal("TotalCost");
+    
+                    // Add details to the text display
+                    pendingPOsList.append("Purchase Order ID: ").append(purchaseOrderId).append("\n")
+                                  .append("Supplier ID: ").append(supplierId).append("\n")
+                                  .append("Order Date: ").append(orderDate).append("\n")
+                                  .append("Order Status: ").append(orderStatus).append("\n")
+                                  .append("Total Cost: ").append(totalCost).append("\n")
+                                  .append("---------------------------\n");
+    
+                    // Add PO ID to the dropdown
+                    poModel.addElement(purchaseOrderId + " (Status: " + orderStatus + ")");
+                }
+    
+                // If no pending POs, display message and exit
+                if (poModel.getSize() == 0) {
+                    textArea.setText("No pending purchase orders found.\n" + pendingPOsList);
+                    return;
+                }
+    
+                // Display pending POs in the text area
+                textArea.setText(pendingPOsList.toString());
+    
+                // Allow user to select a pending PO
+                JComboBox<String> poComboBox = new JComboBox<>(poModel);
+                int poResult = JOptionPane.showConfirmDialog(null, poComboBox, "Select Pending Purchase Order", JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE);
+    
+                if (poResult == JOptionPane.OK_OPTION) {
+                    String selectedPOWithStatus = (String) poComboBox.getSelectedItem();
+                    String selectedPO = selectedPOWithStatus.split(" ")[0]; // Extract PO ID
+    
+                    // Dropdown for selecting status
+                    String[] statuses = { "Cancelled", "Completed" };
+                    JComboBox<String> statusComboBox = new JComboBox<>(statuses);
+                    int statusResult = JOptionPane.showConfirmDialog(null, statusComboBox, "Change Purchase Order Status", JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE);
+    
+                    if (statusResult == JOptionPane.OK_OPTION) {
+                        String selectedStatus = (String) statusComboBox.getSelectedItem();
+    
+                        if (selectedStatus.equals("Cancelled")) {
+                            // Update status to Cancelled
+                            String updatePOStatusQuery = "UPDATE PurchaseOrder SET OrderStatus = 'Cancelled' WHERE PurchaseOrderID = ?";
+                            try (PreparedStatement updateStatusStmt = connection.prepareStatement(updatePOStatusQuery)) {
+                                updateStatusStmt.setString(1, selectedPO);
+                                updateStatusStmt.executeUpdate();
+                                textArea.setText("Purchase Order " + selectedPO + " has been marked as Cancelled.");
+                            }
+                        } else if (selectedStatus.equals("Completed")) {
+                            // Mark as Completed and update stock
+                            String updatePOStatusQuery = "UPDATE PurchaseOrder SET OrderStatus = 'Completed' WHERE PurchaseOrderID = ?";
+                            try (PreparedStatement updateStatusStmt = connection.prepareStatement(updatePOStatusQuery)) {
+                                updateStatusStmt.setString(1, selectedPO);
+                                updateStatusStmt.executeUpdate();
+                            }
+    
+                            // Update stock for products in the completed PO
+                            String getPOLinesQuery = "SELECT ProductID, Quantity FROM PurchaseOrderLine WHERE PurchaseOrderID = ?";
+                            try (PreparedStatement getPOLinesStmt = connection.prepareStatement(getPOLinesQuery)) {
+                                getPOLinesStmt.setString(1, selectedPO);
+                                try (ResultSet poLineRS = getPOLinesStmt.executeQuery()) {
+                                    while (poLineRS.next()) {
+                                        String productID = poLineRS.getString("ProductID");
+                                        int quantity = poLineRS.getInt("Quantity");
+    
+                                        String updateStockQuery = "UPDATE Products SET QuantityInStock = QuantityInStock + ? WHERE ProductID = ?";
+                                        try (PreparedStatement updateStockStmt = connection.prepareStatement(updateStockQuery)) {
+                                            updateStockStmt.setInt(1, quantity);
+                                            updateStockStmt.setString(2, productID);
+                                            updateStockStmt.executeUpdate();
+                                        }
+                                    }
+                                }
+                            }
+                            textArea.setText("Purchase Order " + selectedPO + " has been marked as Completed and stock updated.");
+                        }
+                    } else {
+                        textArea.setText("Operation cancelled.");
+                    }
+                } else {
+                    textArea.setText("Operation cancelled.");
+                }
+            }
+        } catch (SQLException e) {
+            textArea.setText("Error while changing Purchase Order status: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
+    
     
     
 }
