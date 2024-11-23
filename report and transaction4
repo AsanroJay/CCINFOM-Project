@@ -1,0 +1,88 @@
+
+    private static void generateReport4(Connection connection, JTextArea textArea) throws SQLException {
+        // Add logic for Report 4
+        textArea.setText("Report 4: Purchase Order Summary generated.");
+        textArea.setText("Report 4: Purchase Order and Restocking Summary\n");
+    textArea.append("=============================================================\n");
+
+    // Base query to retrieve purchase orders, suppliers, and products
+    String reportQuery = """
+        SELECT 
+            PurchaseOrder.PurchaseOrderID,
+            Supplier.SupplierName, 
+            Supplier.PhoneNo, 
+            PurchaseOrder.OrderDate, 
+            PurchaseOrder.OrderStatus, 
+            PurchaseOrderLine.ProductID, 
+            PurchaseOrderLine.Quantity, 
+            Products.ProductName, 
+            Products.Price
+        FROM 
+            PurchaseOrder
+        JOIN 
+            PurchaseOrderLine ON PurchaseOrder.PurchaseOrderID = PurchaseOrderLine.PurchaseOrderID
+        JOIN 
+            Supplier ON PurchaseOrder.SupplierID = Supplier.SupplierID
+        JOIN 
+            Products ON PurchaseOrderLine.ProductID = Products.ProductID
+        ORDER BY 
+            Supplier.SupplierName, PurchaseOrder.PurchaseOrderID;
+    """;
+
+    try (PreparedStatement reportStmt = connection.prepareStatement(reportQuery);
+         ResultSet reportResult = reportStmt.executeQuery()) {
+
+        String currentSupplier = "";
+        double totalCost = 0.0;
+
+        while (reportResult.next()) {
+            String supplierName = reportResult.getString("SupplierName");
+            String contactNumber = reportResult.getString("PhoneNo");
+            String purchaseOrderId = reportResult.getString("PurchaseOrderID");
+            Date orderDate = reportResult.getDate("OrderDate");
+            String orderStatus = reportResult.getString("OrderStatus");
+            String productId = reportResult.getString("ProductID");
+            String productName = reportResult.getString("ProductName");
+            int quantity = reportResult.getInt("Quantity");
+            double price = reportResult.getDouble("Price");
+
+            // If the supplier changes, print supplier details
+            if (!supplierName.equals(currentSupplier)) {
+                // If there was a previous supplier, print the total cost for the previous one
+                if (!currentSupplier.isEmpty()) {
+                    textArea.append("\nTotal cost for all orders from " + currentSupplier + ": $" + String.format("%.2f", totalCost) + "\n");
+                }
+
+                // Print new supplier details
+                currentSupplier = supplierName;
+                totalCost = 0.0; // Reset the total cost for the new supplier
+                textArea.append("=============================================================\n\n");
+                textArea.append("Supplier: " + supplierName + "\n");
+                textArea.append("Phone: " + contactNumber + "\n");
+                textArea.append("-------------------------------------------\n");
+            }
+
+            // Print purchase order and product details
+            textArea.append("Purchase Order ID: " + purchaseOrderId + "\n");
+            textArea.append("Order Date: " + orderDate + "\n");
+            textArea.append("Order Status: " + orderStatus + "\n");
+            textArea.append("-------------------------------------------\n");
+            textArea.append(String.format("  ProductID: %-10s | Product: %-20s \nQuantity: %-5d | Price: $%-8.2f\n",
+                    productId, productName, quantity, price));
+
+            // Update total cost for the current order
+            totalCost += price * quantity;
+        }
+
+        // Print the total cost for the last supplier
+        if (!currentSupplier.isEmpty()) {
+            textArea.append("\nTotal cost for all orders from " + currentSupplier + ": $" + String.format("%.2f", totalCost) + "\n");
+     
+        }
+
+    } catch (SQLException ex) {
+        textArea.append("\nError generating report: " + ex.getMessage());
+    }
+
+}
+    
