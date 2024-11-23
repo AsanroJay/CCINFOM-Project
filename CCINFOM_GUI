@@ -552,7 +552,102 @@ private static void insertPaymentInfo2(Connection connection, String paymentId, 
 
     private static void executeTransaction4(Connection connection, JTextArea textArea) throws SQLException {
         // Add logic for Transaction 4
-        textArea.setText("Transaction 4: Complete Customer Purchase executed.");
+       
+        try {
+        // Step 1: Show Existing Order IDs in a Dropdown
+        String orderQuery = "SELECT OrderID FROM Orders";
+        PreparedStatement orderStmt = connection.prepareStatement(orderQuery);
+        ResultSet orderResult = orderStmt.executeQuery();
+
+        JComboBox<String> orderComboBox = new JComboBox<>();
+        while (orderResult.next()) {
+            String orderId = orderResult.getString("OrderID");
+            orderComboBox.addItem(orderId);
+        }
+
+        int orderSelection = JOptionPane.showConfirmDialog(
+                null,
+                orderComboBox,
+                "Select Order ID",
+                JOptionPane.OK_CANCEL_OPTION
+        );
+
+        if (orderSelection != JOptionPane.OK_OPTION) {
+            textArea.setText("Operation canceled.\n");
+            return;
+        }
+
+        String selectedOrderId = (String) orderComboBox.getSelectedItem();
+
+        // Step 2: Prompt the User to Choose the Order Status
+        Object[] options = {"Cancel Order", "Mark as Delivered"};
+        int statusSelection = JOptionPane.showOptionDialog(
+                null,
+                "What would you like to do with Order ID: " + selectedOrderId + "?",
+                "Update Order Status",
+                JOptionPane.YES_NO_OPTION,
+                JOptionPane.QUESTION_MESSAGE,
+                null,
+                options,
+                options[0]
+        );
+
+        if (statusSelection == JOptionPane.CLOSED_OPTION) {
+            textArea.setText("No action taken for Order ID: " + selectedOrderId + ".\n");
+            return;
+        }
+
+        String newStatus;
+        if (statusSelection == 0) { // Cancel Order
+            newStatus = "Cancelled";
+        } else { // Mark as Delivered
+            newStatus = "Delivered";
+        }
+
+        // Step 3: Update the Order Status in the Database
+        String updateStatusQuery = "UPDATE Orders SET OrderStatus = ? WHERE OrderID = ?";
+        PreparedStatement updateStatusStmt = connection.prepareStatement(updateStatusQuery);
+        updateStatusStmt.setString(1, newStatus);
+        updateStatusStmt.setString(2, selectedOrderId);
+
+        int rowsUpdated = updateStatusStmt.executeUpdate();
+        textArea.setText("Transaction 4: Complete Customer Purchase executed.\n");
+        if (rowsUpdated > 0) {
+            textArea.append("Order ID " + selectedOrderId + " has been updated to status: " + newStatus + ".\n");
+
+            // Step 4: Update Product Stock if Marked as Delivered
+            if ("Delivered".equalsIgnoreCase(newStatus)) {
+                String orderLineQuery = "SELECT ProductID, QuantityOrder FROM OrderLine WHERE OrderID = ?";
+                PreparedStatement orderLineStmt = connection.prepareStatement(orderLineQuery);
+                orderLineStmt.setString(1, selectedOrderId);
+
+                ResultSet orderLineResult = orderLineStmt.executeQuery();
+
+                while (orderLineResult.next()) {
+                    String productId = orderLineResult.getString("ProductID");
+                    int orderedQuantity = orderLineResult.getInt("QuantityOrder");
+
+                    // Update the product stock by subtracting the ordered quantity
+                    String updateStockQuery = "UPDATE Products SET QuantityInStock = QuantityInStock - ? WHERE ProductID = ?";
+                    PreparedStatement updateStockStmt = connection.prepareStatement(updateStockQuery);
+                    updateStockStmt.setInt(1, orderedQuantity);
+                    updateStockStmt.setString(2, productId);
+
+                    int stockUpdated = updateStockStmt.executeUpdate();
+                    if (stockUpdated > 0) {
+                        textArea.append("Product ID " + productId + " stock updated. Reduced by " + orderedQuantity + " units.\n");
+                    } else {
+                        textArea.append("Failed to update stock for Product ID: " + productId + ".\n");
+                    }
+                }
+            }
+        } else {
+            textArea.append("Failed to update status for Order ID: " + selectedOrderId + ".\n");
+        }
+    } catch (SQLException ex) {
+        textArea.append("Error updating order status or product stock: " + ex.getMessage() + "\n");
+    }  
+    
     }
 
     private static void generateReport1(Connection connection, JTextArea textArea) throws SQLException {
@@ -789,10 +884,92 @@ private static void insertPaymentInfo2(Connection connection, String paymentId, 
         textArea.setText("Report 3: Product Sales Performance generated.");
     }
 
-    private static void generateReport4(Connection connection, JTextArea textArea) throws SQLException {
+     private static void generateReport4(Connection connection, JTextArea textArea) throws SQLException {
         // Add logic for Report 4
         textArea.setText("Report 4: Purchase Order Summary generated.");
+        textArea.setText("Report 4: Purchase Order and Restocking Summary\n");
+    textArea.append("=============================================================\n");
+
+    // Base query to retrieve purchase orders, suppliers, and products
+    String reportQuery = """
+        SELECT 
+            PurchaseOrder.PurchaseOrderID,
+            Supplier.SupplierName, 
+            Supplier.PhoneNo, 
+            PurchaseOrder.OrderDate, 
+            PurchaseOrder.OrderStatus, 
+            PurchaseOrderLine.ProductID, 
+            PurchaseOrderLine.Quantity, 
+            Products.ProductName, 
+            Products.Price
+        FROM 
+            PurchaseOrder
+        JOIN 
+            PurchaseOrderLine ON PurchaseOrder.PurchaseOrderID = PurchaseOrderLine.PurchaseOrderID
+        JOIN 
+            Supplier ON PurchaseOrder.SupplierID = Supplier.SupplierID
+        JOIN 
+            Products ON PurchaseOrderLine.ProductID = Products.ProductID
+        ORDER BY 
+            Supplier.SupplierName, PurchaseOrder.PurchaseOrderID;
+    """;
+
+    try (PreparedStatement reportStmt = connection.prepareStatement(reportQuery);
+         ResultSet reportResult = reportStmt.executeQuery()) {
+
+        String currentSupplier = "";
+        double totalCost = 0.0;
+
+        while (reportResult.next()) {
+            String supplierName = reportResult.getString("SupplierName");
+            String contactNumber = reportResult.getString("PhoneNo");
+            String purchaseOrderId = reportResult.getString("PurchaseOrderID");
+            Date orderDate = reportResult.getDate("OrderDate");
+            String orderStatus = reportResult.getString("OrderStatus");
+            String productId = reportResult.getString("ProductID");
+            String productName = reportResult.getString("ProductName");
+            int quantity = reportResult.getInt("Quantity");
+            double price = reportResult.getDouble("Price");
+
+            // If the supplier changes, print supplier details
+            if (!supplierName.equals(currentSupplier)) {
+                // If there was a previous supplier, print the total cost for the previous one
+                if (!currentSupplier.isEmpty()) {
+                    textArea.append("\nTotal cost for all orders from " + currentSupplier + ": $" + String.format("%.2f", totalCost) + "\n");
+                }
+
+                // Print new supplier details
+                currentSupplier = supplierName;
+                totalCost = 0.0; // Reset the total cost for the new supplier
+                textArea.append("=============================================================\n\n");
+                textArea.append("Supplier: " + supplierName + "\n");
+                textArea.append("Phone: " + contactNumber + "\n");
+                textArea.append("-------------------------------------------\n");
+            }
+
+            // Print purchase order and product details
+            textArea.append("Purchase Order ID: " + purchaseOrderId + "\n");
+            textArea.append("Order Date: " + orderDate + "\n");
+            textArea.append("Order Status: " + orderStatus + "\n");
+            textArea.append("-------------------------------------------\n");
+            textArea.append(String.format("  ProductID: %-10s | Product: %-20s \nQuantity: %-5d | Price: $%-8.2f\n",
+                    productId, productName, quantity, price));
+
+            // Update total cost for the current order
+            totalCost += price * quantity;
+        }
+
+        // Print the total cost for the last supplier
+        if (!currentSupplier.isEmpty()) {
+            textArea.append("\nTotal cost for all orders from " + currentSupplier + ": $" + String.format("%.2f", totalCost) + "\n");
+     
+        }
+
+    } catch (SQLException ex) {
+        textArea.append("\nError generating report: " + ex.getMessage());
     }
+
+}
 
     private static void fetchProductRecords(Connection connection, JTextArea textArea) throws SQLException {
         String selectSQL = "SELECT * FROM Products";
