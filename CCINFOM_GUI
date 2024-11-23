@@ -479,9 +479,9 @@ private static void executeTransaction2(Connection connection, JTextArea textAre
 
     } catch (SQLException e) {
         e.printStackTrace();
-        textArea.setText("FUCK YOU IT FAILED SQL ERROR");
+        textArea.setText("Transaction Cancelled");
     } catch (NumberFormatException ex) {
-        textArea.append("Error: FUCK YOU INVALID INPUT");
+        textArea.append(" INVALID INPUT");
     }
 
 }
