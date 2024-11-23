@@ -3,13 +3,12 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.sql.*;
-import java.util.Scanner;
 
-public class NewUpdate {
+public class DBfinalappgui {
 
     private static final String DB_URL = "jdbc:mysql://localhost:3306/CCINFOM_STORE";
     private static final String USER = "root";
-    private static final String PASSWORD = "pass";
+    private static final String PASSWORD = "Newpassword123?";
 
     public static void main(String[] args) {
         JFrame frame = new JFrame("Database Viewer");
