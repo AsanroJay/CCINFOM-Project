@@ -8,7 +8,7 @@ public class DBfinalappgui {
 
     private static final String DB_URL = "jdbc:mysql://localhost:3306/CCINFOM_STORE";
     private static final String USER = "root";
-    private static final String PASSWORD = "Newpassword123?";
+    private static final String PASSWORD = "PASSWORD";
 
     public static void main(String[] args) {
         JFrame frame = new JFrame("Database Viewer");
